@@ -1,6 +1,6 @@
-# ServiceDeck
+# API Deployment Explorer
 
-**ServiceDeck** is a modern, interactive dashboard designed to visualize and manage API service deployments across multiple regions and environments (PRD, STG, UAT).
+**API Deployment Explorer** is a modern, interactive dashboard designed to visualize and manage API service deployments across multiple regions and environments (PRD, STG, UAT).
 
 ![Dashboard Screenshot](https://via.placeholder.com/800x450?text=ServiceDeck+Dashboard)
 
