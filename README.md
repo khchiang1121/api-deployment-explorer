@@ -63,10 +63,10 @@ docker build -t api-deployment-explorer .
 Run the container:
 
 ```bash
-docker run -p 8080:80 api-deployment-explorer
+docker run -p 8075:80 api-deployment-explorer
 ```
 
-The app will be available at `http://localhost:8080`.
+The app will be available at `http://localhost:8075`.
 
 ### GitLab Pages
 
