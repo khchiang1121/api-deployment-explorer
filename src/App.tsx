@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2 } from 'lucide-react';
+import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink } from 'lucide-react';
 
 // --- Interfaces ---
 
@@ -20,6 +20,8 @@ interface APIService {
   id: string;
   category: string;
   name: string;
+  urlKey: string;
+  urlOverrides?: Record<string, string>;
   description: string;
   deployRules?: DeployRules | null;
   endpoints: Endpoint[];
@@ -32,7 +34,7 @@ interface Environment {
   name: string;
   type: string;
   rawType: string;
-  baseUrl: string;
+  urlPattern: string;
   isDeployed?: boolean; // dynamic property
 }
 
@@ -46,7 +48,23 @@ const checkApiAvailability = (api: APIService, env: Environment | undefined) => 
   if (excludeTypes && (excludeTypes.includes(env.rawType) || excludeTypes.includes(env.type))) return false;
   if (onlyRegions && !onlyRegions.includes(env.region)) return false;
   if (onlyTypes && !onlyTypes.includes(env.rawType) && !onlyTypes.includes(env.type)) return false;
+  if (onlyRegions && !onlyRegions.includes(env.region)) return false;
+  if (onlyTypes && !onlyTypes.includes(env.rawType) && !onlyTypes.includes(env.type)) return false;
   return true;
+};
+
+const resolveUrl = (api: APIService, env: Environment | undefined) => {
+  if (!env) return '';
+  if (api.urlOverrides && api.urlOverrides[env.id]) {
+    return api.urlOverrides[env.id];
+  }
+  if (!env.urlPattern) return '';
+  let url = env.urlPattern;
+  url = url.replace('{api}', api.urlKey || '');
+  url = url.replace('{region}', env.region);
+  url = url.replace('{type}', env.type);
+  url = url.replace('{rawType}', env.rawType);
+  return url;
 };
 
 // 顏色對應
@@ -430,7 +448,7 @@ const App = () => {
                     <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} />
                     <span className={`px-1.5 rounded text-[10px] font-bold border ${getEnvColor(selectedEnv?.type)}`}>{selectedEnv?.type}</span>
                   </div>
-                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedEnv?.baseUrl}</h1>
+                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedEnv?.urlPattern} (Template)</h1>
                 </>
               ) : (
                 <>
@@ -475,7 +493,7 @@ const App = () => {
 
           {/* --- VIEW MODE: ENVIRONMENT (Original Grid) --- */}
           {viewMode === 'env' && (
-            <div className="max-w-7xl mx-auto space-y-8 pb-12">
+            <div className="w-full px-6 mx-auto space-y-8 pb-12">
               {Object.entries(envViewApis).map(([category, apiList]) => (
                 <div key={category} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <h3 className="flex items-center gap-2 text-lg font-bold text-slate-700 mb-4 px-1">
@@ -483,7 +501,7 @@ const App = () => {
                     {category}
                     <span className="text-xs text-slate-400 bg-white border px-2 rounded-full">{apiList.length}</span>
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
                     {apiList.map((api) => {
                       const isAvailable = api.isAvailable;
                       return (
@@ -494,21 +512,40 @@ const App = () => {
                               {!isAvailable && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full flex items-center gap-1"><Ban size={10} /> 未部署</span>}
                             </div>
                             <p className="text-xs text-slate-500 line-clamp-2 h-8">{api.description || '暫無描述'}</p>
+
+                            {/* Base URL Display */}
+                            {isAvailable && (
+                              <div className="mt-3 flex items-center gap-1.5 p-2 bg-slate-50 rounded md:rounded-lg border border-slate-100 group-hover:border-blue-100 transition-colors">
+                                <Globe size={12} className="text-slate-400 shrink-0" />
+                                <code className="text-[10px] text-slate-600 font-mono truncate select-all">
+                                  {resolveUrl(api, selectedEnv)}
+                                </code>
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1 bg-slate-50/50 p-2 space-y-2">
                             {api.endpoints.map((ep, idx) => {
-                              const fullUrl = isAvailable ? `${selectedEnv?.baseUrl}${ep.path}` : null;
+                              const baseUrl = resolveUrl(api, selectedEnv);
+                              const fullUrl = isAvailable ? `${baseUrl}${ep.path}` : null;
                               const uniqueKey = `${selectedEnvId}-${api.id}-${idx}`;
                               const isCopied = copiedKey === uniqueKey;
                               return (
                                 <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-sm hover:border-blue-200 group">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>{ep.method}</span>
-                                    <span className="text-xs font-semibold text-slate-700 truncate">{ep.label}</span>
+                                  <div className="mb-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>{ep.method}</span>
+                                      <span className="text-xs font-semibold text-slate-700 truncate">{ep.label}</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 font-mono truncate pl-1" title={ep.path}>
+                                      {ep.path}
+                                    </div>
                                   </div>
-                                  <div className="flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                  <div className="flex gap-2">
                                     <button onClick={() => isAvailable && copyToClipboard(fullUrl, uniqueKey)} disabled={!isAvailable} className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold border ${!isAvailable ? 'cursor-not-allowed bg-slate-100' : isCopied ? 'bg-green-50 text-green-700 border-green-200' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
                                       {isAvailable && isCopied ? <Check size={12} /> : <Copy size={12} />} {isAvailable ? (isCopied ? '已複製' : '複製') : '不可用'}
+                                    </button>
+                                    <button onClick={() => isAvailable && fullUrl && window.open(fullUrl, '_blank')} disabled={!isAvailable} className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold border ${!isAvailable ? 'cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'}`}>
+                                      <ExternalLink size={12} /> {isAvailable ? '前往' : '不可用'}
                                     </button>
                                   </div>
                                 </div>
@@ -526,7 +563,7 @@ const App = () => {
 
           {/* --- VIEW MODE: API MATRIX (New Feature) --- */}
           {viewMode === 'api' && (
-            <div className="max-w-7xl mx-auto pb-12">
+            <div className="w-full px-6 mx-auto pb-12">
               {/* Endpoints Info Card */}
               <div className="bg-white rounded-xl border border-blue-100 p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center">
                 <h3 className="text-sm font-bold text-slate-600 mr-2">此服務包含端點：</h3>
@@ -540,7 +577,7 @@ const App = () => {
               </div>
 
               {/* Matrix Grid */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
                 {Object.entries(apiMatrixData).map(([region, envs]) => (
                   <div key={region} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
                     <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center">
@@ -561,10 +598,9 @@ const App = () => {
                                 <span className={`w-2 h-2 rounded-full ${isDeployed ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-slate-300'}`} />
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-bold text-sm text-slate-800">{env.name}</span>
                                     <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
                                   </div>
-                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{env.baseUrl}</div>
+                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{resolveUrl(selectedApi, env)}</div>
                                 </div>
                               </div>
                               {!isDeployed && <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-100 rounded">未部署</span>}
@@ -574,7 +610,8 @@ const App = () => {
                             {isDeployed && (
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 {selectedApi.endpoints.map((ep, i) => {
-                                  const fullUrl = `${env.baseUrl}${ep.path}`;
+                                  const baseUrl = resolveUrl(selectedApi, env);
+                                  const fullUrl = `${baseUrl}${ep.path}`;
                                   const uniqueKey = `matrix-${env.id}-${i}`;
                                   const isCopied = copiedKey === uniqueKey;
                                   return (

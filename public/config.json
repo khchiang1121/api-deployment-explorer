@@ -1,6 +1,118 @@
 {
   "apis": [
     {
+      "id": "api-obs-prometheus",
+      "category": "觀測類別 (Observation)",
+      "name": "Prometheus",
+      "description": "系統監控與警告工具",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Web UI",
+          "path": "/"
+        }
+      ],
+      "urlKey": "prometheus"
+    },
+    {
+      "id": "api-obs-alertmanager",
+      "category": "觀測類別 (Observation)",
+      "name": "Alertmanager",
+      "description": "警告通知管理",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Web UI",
+          "path": "/"
+        }
+      ],
+      "urlKey": "alertmanager"
+    },
+    {
+      "id": "api-obs-grafana",
+      "category": "觀測類別 (Observation)",
+      "name": "Grafana",
+      "description": "數據視覺化儀表板",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Web UI",
+          "path": "/"
+        }
+      ],
+      "urlKey": "grafana"
+    },
+    {
+      "id": "api-obs-kibana",
+      "category": "觀測類別 (Observation)",
+      "name": "Kibana",
+      "description": "日誌分析與視覺化",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Web UI",
+          "path": "/"
+        }
+      ],
+      "urlKey": "kibana"
+    },
+    {
+      "id": "api-k8s-dashboard",
+      "category": "K8s 類別 (Kubernetes)",
+      "name": "Kubernetes Dashboard",
+      "description": "Kubernetes Web UI",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Web UI",
+          "path": "/"
+        }
+      ],
+      "urlKey": "kubernetes-dashboard"
+    },
+    {
+      "id": "api-k8s-dex",
+      "category": "K8s 類別 (Kubernetes)",
+      "name": "Dex",
+      "description": "Identity Provider (OIDC)",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Health Check",
+          "path": "/healthz"
+        }
+      ],
+      "urlKey": "dex"
+    },
+    {
+      "id": "api-capi-vm",
+      "category": "Cluster API 類別 (Cluster API)",
+      "name": "VM Service",
+      "description": "虛擬機管理服務",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Health Check",
+          "path": "/health"
+        }
+      ],
+      "urlKey": "vm-service"
+    },
+    {
+      "id": "api-capi-bm",
+      "category": "Cluster API 類別 (Cluster API)",
+      "name": "BM Service",
+      "description": "實體機管理服務 (Bare Metal)",
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Health Check",
+          "path": "/health"
+        }
+      ],
+      "urlKey": "bm-service"
+    },
+    {
       "id": "api-1",
       "category": "會員核心 (Member)",
       "name": "User Service",
@@ -22,7 +134,11 @@
           "label": "取得個資",
           "path": "/api/v1/users/me"
         }
-      ]
+      ],
+      "urlKey": "user-service",
+      "urlOverrides": {
+        "Region-01-PRD1": "https://custom-auth.example.com"
+      }
     },
     {
       "id": "api-2",
@@ -40,7 +156,8 @@
           "label": "更新頭像",
           "path": "/api/v1/profile/avatar"
         }
-      ]
+      ],
+      "urlKey": "profile-service"
     },
     {
       "id": "api-3",
@@ -63,7 +180,8 @@
           "label": "訂單詳情",
           "path": "/api/v2/orders/{id}"
         }
-      ]
+      ],
+      "urlKey": "order-service"
     },
     {
       "id": "api-4",
@@ -89,7 +207,8 @@
           "label": "退款申請",
           "path": "/api/payment/refund"
         }
-      ]
+      ],
+      "urlKey": "payment-gateway"
     },
     {
       "id": "api-5",
@@ -117,7 +236,8 @@
           "label": "清除快取",
           "path": "/api/admin/cache/clear"
         }
-      ]
+      ],
+      "urlKey": "dashboard-api"
     },
     {
       "id": "api-gen-6",
@@ -135,7 +255,8 @@
           "label": "列表查詢",
           "path": "/api/service-6/list"
         }
-      ]
+      ],
+      "urlKey": "service-6"
     },
     {
       "id": "api-gen-7",
@@ -153,7 +274,8 @@
           "label": "列表查詢",
           "path": "/api/service-7/list"
         }
-      ]
+      ],
+      "urlKey": "service-7"
     },
     {
       "id": "api-gen-8",
@@ -171,7 +293,8 @@
           "label": "列表查詢",
           "path": "/api/service-8/list"
         }
-      ]
+      ],
+      "urlKey": "service-8"
     },
     {
       "id": "api-gen-9",
@@ -189,7 +312,8 @@
           "label": "列表查詢",
           "path": "/api/service-9/list"
         }
-      ]
+      ],
+      "urlKey": "service-9"
     },
     {
       "id": "api-gen-10",
@@ -207,7 +331,8 @@
           "label": "列表查詢",
           "path": "/api/service-10/list"
         }
-      ]
+      ],
+      "urlKey": "service-10"
     },
     {
       "id": "api-gen-11",
@@ -225,7 +350,8 @@
           "label": "列表查詢",
           "path": "/api/service-11/list"
         }
-      ]
+      ],
+      "urlKey": "service-11"
     },
     {
       "id": "api-gen-12",
@@ -243,7 +369,8 @@
           "label": "列表查詢",
           "path": "/api/service-12/list"
         }
-      ]
+      ],
+      "urlKey": "service-12"
     },
     {
       "id": "api-gen-13",
@@ -261,7 +388,8 @@
           "label": "列表查詢",
           "path": "/api/service-13/list"
         }
-      ]
+      ],
+      "urlKey": "service-13"
     },
     {
       "id": "api-gen-14",
@@ -279,7 +407,8 @@
           "label": "列表查詢",
           "path": "/api/service-14/list"
         }
-      ]
+      ],
+      "urlKey": "service-14"
     },
     {
       "id": "api-gen-15",
@@ -297,7 +426,8 @@
           "label": "列表查詢",
           "path": "/api/service-15/list"
         }
-      ]
+      ],
+      "urlKey": "service-15"
     },
     {
       "id": "api-gen-16",
@@ -315,7 +445,8 @@
           "label": "列表查詢",
           "path": "/api/service-16/list"
         }
-      ]
+      ],
+      "urlKey": "service-16"
     },
     {
       "id": "api-gen-17",
@@ -333,7 +464,8 @@
           "label": "列表查詢",
           "path": "/api/service-17/list"
         }
-      ]
+      ],
+      "urlKey": "service-17"
     },
     {
       "id": "api-gen-18",
@@ -351,7 +483,8 @@
           "label": "列表查詢",
           "path": "/api/service-18/list"
         }
-      ]
+      ],
+      "urlKey": "service-18"
     },
     {
       "id": "api-gen-19",
@@ -369,7 +502,8 @@
           "label": "列表查詢",
           "path": "/api/service-19/list"
         }
-      ]
+      ],
+      "urlKey": "service-19"
     },
     {
       "id": "api-gen-20",
@@ -387,7 +521,8 @@
           "label": "列表查詢",
           "path": "/api/service-20/list"
         }
-      ]
+      ],
+      "urlKey": "service-20"
     }
   ],
   "envs": [
@@ -397,7 +532,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-01.prd1.example.com"
+      "urlPattern": "https://{api}.region-01.prd1.example.com"
     },
     {
       "id": "Region-01-PRD2",
@@ -405,7 +540,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-01.prd2.example.com"
+      "urlPattern": "https://{api}.region-01.prd2.example.com"
     },
     {
       "id": "Region-01-STG1",
@@ -413,7 +548,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-01.stg1.example.com"
+      "urlPattern": "https://{api}.region-01.stg1.example.com"
     },
     {
       "id": "Region-01-STG2",
@@ -421,7 +556,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-01.stg2.example.com"
+      "urlPattern": "https://{api}.region-01.stg2.example.com"
     },
     {
       "id": "Region-02-PRD1",
@@ -429,7 +564,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-02.prd1.example.com"
+      "urlPattern": "https://{api}.region-02.prd1.example.com"
     },
     {
       "id": "Region-02-PRD2",
@@ -437,7 +572,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-02.prd2.example.com"
+      "urlPattern": "https://{api}.region-02.prd2.example.com"
     },
     {
       "id": "Region-02-STG1",
@@ -445,7 +580,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-02.stg1.example.com"
+      "urlPattern": "https://{api}.region-02.stg1.example.com"
     },
     {
       "id": "Region-02-STG2",
@@ -453,7 +588,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-02.stg2.example.com"
+      "urlPattern": "https://{api}.region-02.stg2.example.com"
     },
     {
       "id": "Region-02-UAT",
@@ -461,7 +596,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-02.uat.example.com"
+      "urlPattern": "https://{api}.region-02.uat.example.com"
     },
     {
       "id": "Region-03-PRD1",
@@ -469,7 +604,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-03.prd1.example.com"
+      "urlPattern": "https://{api}.region-03.prd1.example.com"
     },
     {
       "id": "Region-03-PRD2",
@@ -477,7 +612,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-03.prd2.example.com"
+      "urlPattern": "https://{api}.region-03.prd2.example.com"
     },
     {
       "id": "Region-03-STG1",
@@ -485,7 +620,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-03.stg1.example.com"
+      "urlPattern": "https://{api}.region-03.stg1.example.com"
     },
     {
       "id": "Region-03-STG2",
@@ -493,7 +628,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-03.stg2.example.com"
+      "urlPattern": "https://{api}.region-03.stg2.example.com"
     },
     {
       "id": "Region-03-UAT",
@@ -501,7 +636,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-03.uat.example.com"
+      "urlPattern": "https://{api}.region-03.uat.example.com"
     },
     {
       "id": "Region-03-DEV",
@@ -509,7 +644,7 @@
       "name": "DEV",
       "type": "DEV",
       "rawType": "DEV",
-      "baseUrl": "https://api.region-03.dev.example.com"
+      "urlPattern": "https://{api}.region-03.dev.example.com"
     },
     {
       "id": "Region-04-PRD1",
@@ -517,7 +652,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-04.prd1.example.com"
+      "urlPattern": "https://{api}.region-04.prd1.example.com"
     },
     {
       "id": "Region-04-PRD2",
@@ -525,7 +660,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-04.prd2.example.com"
+      "urlPattern": "https://{api}.region-04.prd2.example.com"
     },
     {
       "id": "Region-04-STG1",
@@ -533,7 +668,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-04.stg1.example.com"
+      "urlPattern": "https://{api}.region-04.stg1.example.com"
     },
     {
       "id": "Region-04-STG2",
@@ -541,7 +676,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-04.stg2.example.com"
+      "urlPattern": "https://{api}.region-04.stg2.example.com"
     },
     {
       "id": "Region-05-PRD1",
@@ -549,7 +684,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-05.prd1.example.com"
+      "urlPattern": "https://{api}.region-05.prd1.example.com"
     },
     {
       "id": "Region-05-PRD2",
@@ -557,7 +692,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-05.prd2.example.com"
+      "urlPattern": "https://{api}.region-05.prd2.example.com"
     },
     {
       "id": "Region-05-STG1",
@@ -565,7 +700,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-05.stg1.example.com"
+      "urlPattern": "https://{api}.region-05.stg1.example.com"
     },
     {
       "id": "Region-05-STG2",
@@ -573,7 +708,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-05.stg2.example.com"
+      "urlPattern": "https://{api}.region-05.stg2.example.com"
     },
     {
       "id": "Region-05-UAT",
@@ -581,7 +716,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-05.uat.example.com"
+      "urlPattern": "https://{api}.region-05.uat.example.com"
     },
     {
       "id": "Region-06-PRD1",
@@ -589,7 +724,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-06.prd1.example.com"
+      "urlPattern": "https://{api}.region-06.prd1.example.com"
     },
     {
       "id": "Region-06-PRD2",
@@ -597,7 +732,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-06.prd2.example.com"
+      "urlPattern": "https://{api}.region-06.prd2.example.com"
     },
     {
       "id": "Region-06-STG1",
@@ -605,7 +740,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-06.stg1.example.com"
+      "urlPattern": "https://{api}.region-06.stg1.example.com"
     },
     {
       "id": "Region-06-STG2",
@@ -613,7 +748,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-06.stg2.example.com"
+      "urlPattern": "https://{api}.region-06.stg2.example.com"
     },
     {
       "id": "Region-06-UAT",
@@ -621,7 +756,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-06.uat.example.com"
+      "urlPattern": "https://{api}.region-06.uat.example.com"
     },
     {
       "id": "Region-06-DEV",
@@ -629,7 +764,7 @@
       "name": "DEV",
       "type": "DEV",
       "rawType": "DEV",
-      "baseUrl": "https://api.region-06.dev.example.com"
+      "urlPattern": "https://{api}.region-06.dev.example.com"
     },
     {
       "id": "Region-07-PRD1",
@@ -637,7 +772,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-07.prd1.example.com"
+      "urlPattern": "https://{api}.region-07.prd1.example.com"
     },
     {
       "id": "Region-07-PRD2",
@@ -645,7 +780,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-07.prd2.example.com"
+      "urlPattern": "https://{api}.region-07.prd2.example.com"
     },
     {
       "id": "Region-07-STG1",
@@ -653,7 +788,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-07.stg1.example.com"
+      "urlPattern": "https://{api}.region-07.stg1.example.com"
     },
     {
       "id": "Region-07-STG2",
@@ -661,7 +796,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-07.stg2.example.com"
+      "urlPattern": "https://{api}.region-07.stg2.example.com"
     },
     {
       "id": "Region-08-PRD1",
@@ -669,7 +804,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-08.prd1.example.com"
+      "urlPattern": "https://{api}.region-08.prd1.example.com"
     },
     {
       "id": "Region-08-PRD2",
@@ -677,7 +812,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-08.prd2.example.com"
+      "urlPattern": "https://{api}.region-08.prd2.example.com"
     },
     {
       "id": "Region-08-STG1",
@@ -685,7 +820,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-08.stg1.example.com"
+      "urlPattern": "https://{api}.region-08.stg1.example.com"
     },
     {
       "id": "Region-08-STG2",
@@ -693,7 +828,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-08.stg2.example.com"
+      "urlPattern": "https://{api}.region-08.stg2.example.com"
     },
     {
       "id": "Region-08-UAT",
@@ -701,7 +836,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-08.uat.example.com"
+      "urlPattern": "https://{api}.region-08.uat.example.com"
     },
     {
       "id": "Region-09-PRD1",
@@ -709,7 +844,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-09.prd1.example.com"
+      "urlPattern": "https://{api}.region-09.prd1.example.com"
     },
     {
       "id": "Region-09-PRD2",
@@ -717,7 +852,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-09.prd2.example.com"
+      "urlPattern": "https://{api}.region-09.prd2.example.com"
     },
     {
       "id": "Region-09-STG1",
@@ -725,7 +860,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-09.stg1.example.com"
+      "urlPattern": "https://{api}.region-09.stg1.example.com"
     },
     {
       "id": "Region-09-STG2",
@@ -733,7 +868,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-09.stg2.example.com"
+      "urlPattern": "https://{api}.region-09.stg2.example.com"
     },
     {
       "id": "Region-09-UAT",
@@ -741,7 +876,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-09.uat.example.com"
+      "urlPattern": "https://{api}.region-09.uat.example.com"
     },
     {
       "id": "Region-09-DEV",
@@ -749,7 +884,7 @@
       "name": "DEV",
       "type": "DEV",
       "rawType": "DEV",
-      "baseUrl": "https://api.region-09.dev.example.com"
+      "urlPattern": "https://{api}.region-09.dev.example.com"
     },
     {
       "id": "Region-10-PRD1",
@@ -757,7 +892,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-10.prd1.example.com"
+      "urlPattern": "https://{api}.region-10.prd1.example.com"
     },
     {
       "id": "Region-10-PRD2",
@@ -765,7 +900,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-10.prd2.example.com"
+      "urlPattern": "https://{api}.region-10.prd2.example.com"
     },
     {
       "id": "Region-10-STG1",
@@ -773,7 +908,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-10.stg1.example.com"
+      "urlPattern": "https://{api}.region-10.stg1.example.com"
     },
     {
       "id": "Region-10-STG2",
@@ -781,7 +916,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-10.stg2.example.com"
+      "urlPattern": "https://{api}.region-10.stg2.example.com"
     },
     {
       "id": "Region-11-PRD1",
@@ -789,7 +924,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-11.prd1.example.com"
+      "urlPattern": "https://{api}.region-11.prd1.example.com"
     },
     {
       "id": "Region-11-PRD2",
@@ -797,7 +932,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-11.prd2.example.com"
+      "urlPattern": "https://{api}.region-11.prd2.example.com"
     },
     {
       "id": "Region-11-STG1",
@@ -805,7 +940,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-11.stg1.example.com"
+      "urlPattern": "https://{api}.region-11.stg1.example.com"
     },
     {
       "id": "Region-11-STG2",
@@ -813,7 +948,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-11.stg2.example.com"
+      "urlPattern": "https://{api}.region-11.stg2.example.com"
     },
     {
       "id": "Region-11-UAT",
@@ -821,7 +956,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-11.uat.example.com"
+      "urlPattern": "https://{api}.region-11.uat.example.com"
     },
     {
       "id": "Region-12-PRD1",
@@ -829,7 +964,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-12.prd1.example.com"
+      "urlPattern": "https://{api}.region-12.prd1.example.com"
     },
     {
       "id": "Region-12-PRD2",
@@ -837,7 +972,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-12.prd2.example.com"
+      "urlPattern": "https://{api}.region-12.prd2.example.com"
     },
     {
       "id": "Region-12-STG1",
@@ -845,7 +980,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-12.stg1.example.com"
+      "urlPattern": "https://{api}.region-12.stg1.example.com"
     },
     {
       "id": "Region-12-STG2",
@@ -853,7 +988,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-12.stg2.example.com"
+      "urlPattern": "https://{api}.region-12.stg2.example.com"
     },
     {
       "id": "Region-12-UAT",
@@ -861,7 +996,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-12.uat.example.com"
+      "urlPattern": "https://{api}.region-12.uat.example.com"
     },
     {
       "id": "Region-12-DEV",
@@ -869,7 +1004,7 @@
       "name": "DEV",
       "type": "DEV",
       "rawType": "DEV",
-      "baseUrl": "https://api.region-12.dev.example.com"
+      "urlPattern": "https://{api}.region-12.dev.example.com"
     },
     {
       "id": "Region-13-PRD1",
@@ -877,7 +1012,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-13.prd1.example.com"
+      "urlPattern": "https://{api}.region-13.prd1.example.com"
     },
     {
       "id": "Region-13-PRD2",
@@ -885,7 +1020,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-13.prd2.example.com"
+      "urlPattern": "https://{api}.region-13.prd2.example.com"
     },
     {
       "id": "Region-13-STG1",
@@ -893,7 +1028,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-13.stg1.example.com"
+      "urlPattern": "https://{api}.region-13.stg1.example.com"
     },
     {
       "id": "Region-13-STG2",
@@ -901,7 +1036,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-13.stg2.example.com"
+      "urlPattern": "https://{api}.region-13.stg2.example.com"
     },
     {
       "id": "Region-14-PRD1",
@@ -909,7 +1044,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-14.prd1.example.com"
+      "urlPattern": "https://{api}.region-14.prd1.example.com"
     },
     {
       "id": "Region-14-PRD2",
@@ -917,7 +1052,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-14.prd2.example.com"
+      "urlPattern": "https://{api}.region-14.prd2.example.com"
     },
     {
       "id": "Region-14-STG1",
@@ -925,7 +1060,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-14.stg1.example.com"
+      "urlPattern": "https://{api}.region-14.stg1.example.com"
     },
     {
       "id": "Region-14-STG2",
@@ -933,7 +1068,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-14.stg2.example.com"
+      "urlPattern": "https://{api}.region-14.stg2.example.com"
     },
     {
       "id": "Region-14-UAT",
@@ -941,7 +1076,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-14.uat.example.com"
+      "urlPattern": "https://{api}.region-14.uat.example.com"
     },
     {
       "id": "Region-15-PRD1",
@@ -949,7 +1084,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-15.prd1.example.com"
+      "urlPattern": "https://{api}.region-15.prd1.example.com"
     },
     {
       "id": "Region-15-PRD2",
@@ -957,7 +1092,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-15.prd2.example.com"
+      "urlPattern": "https://{api}.region-15.prd2.example.com"
     },
     {
       "id": "Region-15-STG1",
@@ -965,7 +1100,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-15.stg1.example.com"
+      "urlPattern": "https://{api}.region-15.stg1.example.com"
     },
     {
       "id": "Region-15-STG2",
@@ -973,7 +1108,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-15.stg2.example.com"
+      "urlPattern": "https://{api}.region-15.stg2.example.com"
     },
     {
       "id": "Region-15-UAT",
@@ -981,7 +1116,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-15.uat.example.com"
+      "urlPattern": "https://{api}.region-15.uat.example.com"
     },
     {
       "id": "Region-15-DEV",
@@ -989,7 +1124,7 @@
       "name": "DEV",
       "type": "DEV",
       "rawType": "DEV",
-      "baseUrl": "https://api.region-15.dev.example.com"
+      "urlPattern": "https://{api}.region-15.dev.example.com"
     },
     {
       "id": "Region-16-PRD1",
@@ -997,7 +1132,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-16.prd1.example.com"
+      "urlPattern": "https://{api}.region-16.prd1.example.com"
     },
     {
       "id": "Region-16-PRD2",
@@ -1005,7 +1140,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-16.prd2.example.com"
+      "urlPattern": "https://{api}.region-16.prd2.example.com"
     },
     {
       "id": "Region-16-STG1",
@@ -1013,7 +1148,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-16.stg1.example.com"
+      "urlPattern": "https://{api}.region-16.stg1.example.com"
     },
     {
       "id": "Region-16-STG2",
@@ -1021,7 +1156,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-16.stg2.example.com"
+      "urlPattern": "https://{api}.region-16.stg2.example.com"
     },
     {
       "id": "Region-17-PRD1",
@@ -1029,7 +1164,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-17.prd1.example.com"
+      "urlPattern": "https://{api}.region-17.prd1.example.com"
     },
     {
       "id": "Region-17-PRD2",
@@ -1037,7 +1172,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-17.prd2.example.com"
+      "urlPattern": "https://{api}.region-17.prd2.example.com"
     },
     {
       "id": "Region-17-STG1",
@@ -1045,7 +1180,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-17.stg1.example.com"
+      "urlPattern": "https://{api}.region-17.stg1.example.com"
     },
     {
       "id": "Region-17-STG2",
@@ -1053,7 +1188,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-17.stg2.example.com"
+      "urlPattern": "https://{api}.region-17.stg2.example.com"
     },
     {
       "id": "Region-17-UAT",
@@ -1061,7 +1196,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-17.uat.example.com"
+      "urlPattern": "https://{api}.region-17.uat.example.com"
     },
     {
       "id": "Region-18-PRD1",
@@ -1069,7 +1204,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-18.prd1.example.com"
+      "urlPattern": "https://{api}.region-18.prd1.example.com"
     },
     {
       "id": "Region-18-PRD2",
@@ -1077,7 +1212,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-18.prd2.example.com"
+      "urlPattern": "https://{api}.region-18.prd2.example.com"
     },
     {
       "id": "Region-18-STG1",
@@ -1085,7 +1220,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-18.stg1.example.com"
+      "urlPattern": "https://{api}.region-18.stg1.example.com"
     },
     {
       "id": "Region-18-STG2",
@@ -1093,7 +1228,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-18.stg2.example.com"
+      "urlPattern": "https://{api}.region-18.stg2.example.com"
     },
     {
       "id": "Region-18-UAT",
@@ -1101,7 +1236,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-18.uat.example.com"
+      "urlPattern": "https://{api}.region-18.uat.example.com"
     },
     {
       "id": "Region-18-DEV",
@@ -1109,7 +1244,7 @@
       "name": "DEV",
       "type": "DEV",
       "rawType": "DEV",
-      "baseUrl": "https://api.region-18.dev.example.com"
+      "urlPattern": "https://{api}.region-18.dev.example.com"
     },
     {
       "id": "Region-19-PRD1",
@@ -1117,7 +1252,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-19.prd1.example.com"
+      "urlPattern": "https://{api}.region-19.prd1.example.com"
     },
     {
       "id": "Region-19-PRD2",
@@ -1125,7 +1260,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-19.prd2.example.com"
+      "urlPattern": "https://{api}.region-19.prd2.example.com"
     },
     {
       "id": "Region-19-STG1",
@@ -1133,7 +1268,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-19.stg1.example.com"
+      "urlPattern": "https://{api}.region-19.stg1.example.com"
     },
     {
       "id": "Region-19-STG2",
@@ -1141,7 +1276,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-19.stg2.example.com"
+      "urlPattern": "https://{api}.region-19.stg2.example.com"
     },
     {
       "id": "Region-20-PRD1",
@@ -1149,7 +1284,7 @@
       "name": "PRD1",
       "type": "PRD",
       "rawType": "PRD1",
-      "baseUrl": "https://api.region-20.prd1.example.com"
+      "urlPattern": "https://{api}.region-20.prd1.example.com"
     },
     {
       "id": "Region-20-PRD2",
@@ -1157,7 +1292,7 @@
       "name": "PRD2",
       "type": "PRD",
       "rawType": "PRD2",
-      "baseUrl": "https://api.region-20.prd2.example.com"
+      "urlPattern": "https://{api}.region-20.prd2.example.com"
     },
     {
       "id": "Region-20-STG1",
@@ -1165,7 +1300,7 @@
       "name": "STG1",
       "type": "STG",
       "rawType": "STG1",
-      "baseUrl": "https://api.region-20.stg1.example.com"
+      "urlPattern": "https://{api}.region-20.stg1.example.com"
     },
     {
       "id": "Region-20-STG2",
@@ -1173,7 +1308,7 @@
       "name": "STG2",
       "type": "STG",
       "rawType": "STG2",
-      "baseUrl": "https://api.region-20.stg2.example.com"
+      "urlPattern": "https://{api}.region-20.stg2.example.com"
     },
     {
       "id": "Region-20-UAT",
@@ -1181,7 +1316,7 @@
       "name": "UAT",
       "type": "UAT",
       "rawType": "UAT",
-      "baseUrl": "https://api.region-20.uat.example.com"
+      "urlPattern": "https://{api}.region-20.uat.example.com"
     }
   ]
 }
