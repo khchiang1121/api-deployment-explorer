@@ -1,96 +1,43 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, ExternalLink, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, List } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2 } from 'lucide-react';
 
-// --- 預設資料生成邏輯 (保持不變) ---
+// --- Interfaces ---
 
-const DEFAULT_APIS = [
-  {
-    id: 'api-1',
-    category: '會員核心 (Member)',
-    name: 'User Service',
-    description: '處理使用者登入、註冊與基本資料',
-    deployRules: null,
-    endpoints: [
-      { method: 'POST', label: '使用者登入', path: '/api/v1/auth/login' },
-      { method: 'POST', label: '註冊新用戶', path: '/api/v1/auth/register' },
-      { method: 'GET', label: '取得個資', path: '/api/v1/users/me' }
-    ]
-  },
-  {
-    id: 'api-2',
-    category: '會員核心 (Member)',
-    name: 'Profile Service',
-    description: '使用者詳細檔案與偏好設定',
-    endpoints: [
-      { method: 'GET', label: '偏好設定', path: '/api/v1/profile/preferences' },
-      { method: 'PUT', label: '更新頭像', path: '/api/v1/profile/avatar' }
-    ]
-  },
-  {
-    id: 'api-3',
-    category: '訂單交易 (Order)',
-    name: 'Order Service',
-    description: '訂單建立與查詢',
-    endpoints: [
-      { method: 'GET', label: '訂單列表', path: '/api/v2/orders' },
-      { method: 'POST', label: '建立訂單', path: '/api/v2/orders/create' },
-      { method: 'GET', label: '訂單詳情', path: '/api/v2/orders/{id}' }
-    ]
-  },
-  {
-    id: 'api-4',
-    category: '訂單交易 (Order)',
-    name: 'Payment Gateway',
-    description: '金流串接服務 (僅限 PRD/STG)',
-    deployRules: { onlyTypes: ['PRD1', 'PRD2', 'STG1', 'STG2'] },
-    endpoints: [
-      { method: 'POST', label: '信用卡結帳', path: '/api/payment/credit-card' },
-      { method: 'POST', label: '退款申請', path: '/api/payment/refund' }
-    ]
-  },
-  {
-    id: 'api-5',
-    category: '後台管理 (Admin)',
-    name: 'Dashboard API',
-    description: '提供給內部後台的報表數據',
-    deployRules: { excludeRegions: ['Region-03'] },
-    endpoints: [
-      { method: 'GET', label: '營收報表', path: '/api/admin/reports/revenue' },
-      { method: 'GET', label: '活躍用戶', path: '/api/admin/stats/active-users' },
-      { method: 'DELETE', label: '清除快取', path: '/api/admin/cache/clear' }
-    ]
-  },
-  ...Array.from({ length: 15 }, (_, i) => ({
-    id: `api-gen-${i + 6}`,
-    category: i < 5 ? '庫存系統 (Inventory)' : i < 10 ? '通知服務 (Notification)' : '第三方整合 (3rd Party)',
-    name: `Service ${i + 6}`,
-    description: `自動生成的服務描述 ${i + 6}`,
-    endpoints: [
-      { method: 'GET', label: '健康檢查', path: `/api/service-${i + 6}/health` },
-      { method: 'GET', label: '列表查詢', path: `/api/service-${i + 6}/list` }
-    ]
-  }))
-];
+interface Endpoint {
+  method: string;
+  label: string;
+  path: string;
+}
 
-const REGIONS = Array.from({ length: 20 }, (_, i) => `Region-${String(i + 1).padStart(2, '0')}`);
-const ENV_TYPES = ['PRD1', 'PRD2', 'STG1', 'STG2', 'UAT', 'DEV'];
+interface DeployRules {
+  onlyRegions?: string[];
+  onlyTypes?: string[];
+  excludeRegions?: string[];
+  excludeTypes?: string[];
+}
 
-const DEFAULT_ENVS = REGIONS.flatMap((region, rIndex) => {
-  const envCount = 4 + (rIndex % 3); 
-  const regionEnvs = ENV_TYPES.slice(0, envCount);
-  
-  return regionEnvs.map((type, eIndex) => ({
-    id: `${region}-${type}`,
-    region: region,
-    name: type,
-    type: type.replace(/\d+/, ''),
-    rawType: type,
-    baseUrl: `https://api.${region.toLowerCase()}.${type.toLowerCase()}.example.com`
-  }));
-});
+interface APIService {
+  id: string;
+  category: string;
+  name: string;
+  description: string;
+  deployRules?: DeployRules | null;
+  endpoints: Endpoint[];
+  isAvailable?: boolean; // dynamic property
+}
+
+interface Environment {
+  id: string;
+  region: string;
+  name: string;
+  type: string;
+  rawType: string;
+  baseUrl: string;
+  isDeployed?: boolean; // dynamic property
+}
 
 // 檢查 API 是否在特定環境可用
-const checkApiAvailability = (api, env) => {
+const checkApiAvailability = (api: APIService, env: Environment | undefined) => {
   if (!api.deployRules) return true;
   if (!env) return false;
 
@@ -103,7 +50,7 @@ const checkApiAvailability = (api, env) => {
 };
 
 // 顏色對應
-const METHOD_COLORS = {
+const METHOD_COLORS: Record<string, string> = {
   GET: 'bg-blue-100 text-blue-700 border-blue-200',
   POST: 'bg-green-100 text-green-700 border-green-200',
   PUT: 'bg-orange-100 text-orange-700 border-orange-200',
@@ -114,42 +61,73 @@ const METHOD_COLORS = {
 
 const App = () => {
   // --- 狀態 ---
-  const [environments, setEnvironments] = useState(DEFAULT_ENVS);
-  const [apis, setApis] = useState(DEFAULT_APIS);
-  
+  const [environments, setEnvironments] = useState<Environment[]>([]);
+  const [apis, setApis] = useState<APIService[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // View Mode: 'env' (Environment Centric) | 'api' (API Matrix Centric)
-  const [viewMode, setViewMode] = useState('env'); 
-  
+  const [viewMode, setViewMode] = useState<'env' | 'api'>('env');
+
   // Selected States
-  const [selectedEnvId, setSelectedEnvId] = useState(DEFAULT_ENVS[0].id);
-  const [selectedApiId, setSelectedApiId] = useState(DEFAULT_APIS[0].id);
-  
-  const [expandedRegions, setExpandedRegions] = useState({ [DEFAULT_ENVS[0].region]: true });
-  const [expandedCategories, setExpandedCategories] = useState({ [DEFAULT_APIS[0].category]: true });
+  const [selectedEnvId, setSelectedEnvId] = useState<string>('');
+  const [selectedApiId, setSelectedApiId] = useState<string>('');
+
+  const [expandedRegions, setExpandedRegions] = useState<Record<string, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
   const [searchQuery, setSearchQuery] = useState(''); // Unified search for sidebar
   const [contentSearch, setContentSearch] = useState(''); // Unified search for content area
-  
+
   const [hideUndeployed, setHideUndeployed] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const [configEnvs, setConfigEnvs] = useState('');
   const [configApis, setConfigApis] = useState('');
 
+  // Fetch Config on Mount
+  useEffect(() => {
+    fetch('./config.json')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load config');
+        return res.json();
+      })
+      .then(data => {
+        setEnvironments(data.envs);
+        setApis(data.apis);
+
+        // Set initial selected states
+        if (data.envs.length > 0) {
+          setSelectedEnvId(data.envs[0].id);
+          setExpandedRegions({ [data.envs[0].region]: true });
+        }
+        if (data.apis.length > 0) {
+          setSelectedApiId(data.apis[0].id);
+          setExpandedCategories({ [data.apis[0].category]: true });
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
   // --- 計算邏輯：環境視角 ---
-  const selectedEnv = useMemo(() => 
-    environments.find(e => e.id === selectedEnvId) || environments[0], 
-  [environments, selectedEnvId]);
+  const selectedEnv = useMemo(() =>
+    environments.find(e => e.id === selectedEnvId) || environments[0],
+    [environments, selectedEnvId]);
 
   const groupedEnvs = useMemo(() => {
     if (viewMode !== 'env') return {};
     const searchLower = searchQuery.toLowerCase();
-    const filtered = environments.filter(env => 
+    const filtered = environments.filter(env =>
       env.region.toLowerCase().includes(searchLower) ||
       env.name.toLowerCase().includes(searchLower)
     );
-    const groups = {};
+    const groups: Record<string, Environment[]> = {};
     filtered.forEach(env => {
       if (!groups[env.region]) groups[env.region] = [];
       groups[env.region].push(env);
@@ -160,23 +138,23 @@ const App = () => {
   const envViewApis = useMemo(() => {
     if (viewMode !== 'env') return {};
     const searchLower = contentSearch.toLowerCase();
-    
+
     const filtered = apis
       .map(api => ({
         ...api,
         isAvailable: checkApiAvailability(api, selectedEnv)
       }))
       .filter(api => {
-        const matchesSearch = 
+        const matchesSearch =
           api.name.toLowerCase().includes(searchLower) ||
-          api.category?.toLowerCase().includes(searchLower) ||
+          (api.category && api.category.toLowerCase().includes(searchLower)) ||
           api.endpoints.some(ep => ep.path.toLowerCase().includes(searchLower));
-        
+
         if (hideUndeployed && !api.isAvailable) return false;
         return matchesSearch;
       });
 
-    const groups = {};
+    const groups: Record<string, APIService[]> = {};
     filtered.forEach(api => {
       const cat = api.category || '未分類';
       if (!groups[cat]) groups[cat] = [];
@@ -187,18 +165,18 @@ const App = () => {
 
 
   // --- 計算邏輯：API 全景視角 ---
-  const selectedApi = useMemo(() => 
+  const selectedApi = useMemo(() =>
     apis.find(a => a.id === selectedApiId) || apis[0],
-  [apis, selectedApiId]);
+    [apis, selectedApiId]);
 
   const groupedApisForSidebar = useMemo(() => {
     if (viewMode !== 'api') return {};
     const searchLower = searchQuery.toLowerCase();
-    const filtered = apis.filter(api => 
+    const filtered = apis.filter(api =>
       api.name.toLowerCase().includes(searchLower) ||
       api.category.toLowerCase().includes(searchLower)
     );
-    const groups = {};
+    const groups: Record<string, APIService[]> = {};
     filtered.forEach(api => {
       const cat = api.category || '未分類';
       if (!groups[cat]) groups[cat] = [];
@@ -210,8 +188,8 @@ const App = () => {
   const apiMatrixData = useMemo(() => {
     if (viewMode !== 'api') return {};
     // Group all environments by region to show the matrix
-    const groups = {};
-    
+    const groups: Record<string, Environment[]> = {};
+
     // Sort regions naturally
     const sortedRegions = [...new Set(environments.map(e => e.region))].sort();
 
@@ -224,8 +202,8 @@ const App = () => {
       }));
 
       // Filter if needed
-      const visibleEnvs = hideUndeployed 
-        ? processedEnvs.filter(e => e.isDeployed) 
+      const visibleEnvs = hideUndeployed
+        ? processedEnvs.filter(e => e.isDeployed)
         : processedEnvs;
 
       if (visibleEnvs.length > 0) {
@@ -237,7 +215,8 @@ const App = () => {
 
 
   // --- Actions ---
-  const copyToClipboard = (text, key) => {
+  const copyToClipboard = (text: string | null, key: string) => {
+    if (!text) return;
     const textArea = document.createElement("textarea");
     textArea.value = text;
     document.body.appendChild(textArea);
@@ -250,14 +229,14 @@ const App = () => {
     document.body.removeChild(textArea);
   };
 
-  const getEnvColor = (type) => {
+  const getEnvColor = (type: string) => {
     const t = (type || '').toUpperCase();
     if (t.includes('PRD')) return 'bg-rose-100 text-rose-800 border-rose-200';
     if (t.includes('QA') || t.includes('STG')) return 'bg-amber-100 text-amber-800 border-amber-200';
     return 'bg-emerald-100 text-emerald-800 border-emerald-200';
   };
 
-  const toggleSidebarGroup = (key, type) => {
+  const toggleSidebarGroup = (key: string, type: 'region' | 'cat') => {
     const setter = type === 'region' ? setExpandedRegions : setExpandedCategories;
     setter(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -273,7 +252,7 @@ const App = () => {
     setConfigApis(JSON.stringify(apis, null, 2));
     setIsConfigOpen(true);
   };
-  
+
   const saveConfig = () => {
     try {
       const newEnvs = JSON.parse(configEnvs);
@@ -284,35 +263,63 @@ const App = () => {
     } catch (e) { alert("Format Error"); }
   };
 
+  // We no longer have DEFAULT variables to reset to, so we likely want to re-fetch or just alert.
+  // For now, removing reset button or making it reload window would be simplest.
+  // Or we can keep the initial data in a ref if we want to "reset to last loaded".
+  // Let's change reset to just reload page or re-fetch.
   const resetConfig = () => {
-    if(confirm('Reset?')) {
-      setEnvironments(DEFAULT_ENVS);
-      setApis(DEFAULT_APIS);
-      setIsConfigOpen(false);
+    if (confirm('Reset to initial config? This will reload the page.')) {
+      window.location.reload();
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4 text-slate-500">
+          <Loader2 className="animate-spin text-blue-500" size={48} />
+          <p>Loading configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="bg-white p-8 rounded-xl shadow-lg border border-red-100 text-center max-w-md">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Ban className="text-red-500" size={24} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Configuration Error</h2>
+          <p className="text-slate-500 mb-6">{error}</p>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
-      
+
       {/* --- Sidebar --- */}
       <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg z-20">
-        
+
         {/* View Mode Toggle Tabs */}
         <div className="flex border-b border-slate-200">
           <button
             onClick={() => setViewMode('env')}
-            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
-              viewMode === 'env' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
-            }`}
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'env' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
+              }`}
           >
             <Globe size={16} /> 環境視角
           </button>
           <button
             onClick={() => setViewMode('api')}
-            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${
-              viewMode === 'api' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
-            }`}
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'api' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
+              }`}
           >
             <LayoutGrid size={16} /> API 全景
           </button>
@@ -334,7 +341,7 @@ const App = () => {
 
         {/* Sidebar List */}
         <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
-          
+
           {/* Environment Mode Sidebar List */}
           {viewMode === 'env' && Object.entries(groupedEnvs).map(([regionName, envList]) => {
             const isExpanded = expandedRegions[regionName];
@@ -373,9 +380,9 @@ const App = () => {
 
           {/* API Mode Sidebar List */}
           {viewMode === 'api' && Object.entries(groupedApisForSidebar).map(([catName, apiList]) => {
-             const isExpanded = expandedCategories[catName];
-             const isActiveCat = apiList.some(a => a.id === selectedApiId);
-             return (
+            const isExpanded = expandedCategories[catName];
+            const isActiveCat = apiList.some(a => a.id === selectedApiId);
+            return (
               <div key={catName} className="mb-1">
                 <button
                   onClick={() => toggleSidebarGroup(catName, 'cat')}
@@ -402,14 +409,14 @@ const App = () => {
                   </div>
                 )}
               </div>
-             )
+            )
           })}
         </div>
       </div>
 
       {/* --- Main Content --- */}
       <div className="flex-1 flex flex-col h-full bg-slate-50/50">
-        
+
         {/* Header (Dynamic based on View Mode) */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm shrink-0 z-10">
           <div className="flex items-center gap-4 min-w-0">
@@ -420,7 +427,7 @@ const App = () => {
               {viewMode === 'env' ? (
                 <>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
-                    <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} /> 
+                    <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} />
                     <span className={`px-1.5 rounded text-[10px] font-bold border ${getEnvColor(selectedEnv?.type)}`}>{selectedEnv?.type}</span>
                   </div>
                   <h1 className="text-lg font-bold text-slate-800 truncate">{selectedEnv?.baseUrl}</h1>
@@ -436,9 +443,9 @@ const App = () => {
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
-             <button
+            <button
               onClick={() => setHideUndeployed(!hideUndeployed)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${hideUndeployed ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
             >
@@ -465,7 +472,7 @@ const App = () => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
-          
+
           {/* --- VIEW MODE: ENVIRONMENT (Original Grid) --- */}
           {viewMode === 'env' && (
             <div className="max-w-7xl mx-auto space-y-8 pb-12">
@@ -520,88 +527,87 @@ const App = () => {
           {/* --- VIEW MODE: API MATRIX (New Feature) --- */}
           {viewMode === 'api' && (
             <div className="max-w-7xl mx-auto pb-12">
-               {/* Endpoints Info Card */}
-               <div className="bg-white rounded-xl border border-blue-100 p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center">
-                 <h3 className="text-sm font-bold text-slate-600 mr-2">此服務包含端點：</h3>
-                 {selectedApi?.endpoints.map((ep, i) => (
-                   <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
-                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${METHOD_COLORS[ep.method]}`}>{ep.method}</span>
-                     <span className="text-xs font-mono text-slate-600">{ep.path}</span>
-                     <span className="text-xs text-slate-400 border-l pl-2 border-slate-200">{ep.label}</span>
-                   </div>
-                 ))}
-               </div>
+              {/* Endpoints Info Card */}
+              <div className="bg-white rounded-xl border border-blue-100 p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center">
+                <h3 className="text-sm font-bold text-slate-600 mr-2">此服務包含端點：</h3>
+                {selectedApi?.endpoints.map((ep, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>{ep.method}</span>
+                    <span className="text-xs font-mono text-slate-600">{ep.path}</span>
+                    <span className="text-xs text-slate-400 border-l pl-2 border-slate-200">{ep.label}</span>
+                  </div>
+                ))}
+              </div>
 
-               {/* Matrix Grid */}
-               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                 {Object.entries(apiMatrixData).map(([region, envs]) => (
-                   <div key={region} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
-                     <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center">
-                        <div className="flex items-center gap-2 font-bold text-slate-700">
-                          <MapPin size={16} className="text-blue-500" />
-                          {region}
-                        </div>
-                        <span className="text-xs text-slate-400">{envs.length} 環境</span>
-                     </div>
-                     
-                     <div className="divide-y divide-slate-100">
-                       {envs.map(env => {
-                         const isDeployed = env.isDeployed;
-                         return (
-                           <div key={env.id} className={`p-4 flex flex-col gap-3 transition-colors ${isDeployed ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50'}`}>
-                             <div className="flex items-center justify-between">
-                               <div className="flex items-center gap-3">
-                                 <span className={`w-2 h-2 rounded-full ${isDeployed ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-slate-300'}`} />
-                                 <div>
-                                   <div className="flex items-center gap-2">
-                                     <span className="font-bold text-sm text-slate-800">{env.name}</span>
-                                     <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
-                                   </div>
-                                   <div className="text-[10px] text-slate-400 font-mono mt-0.5">{env.baseUrl}</div>
-                                 </div>
-                               </div>
-                               {!isDeployed && <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-100 rounded">未部署</span>}
-                             </div>
+              {/* Matrix Grid */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {Object.entries(apiMatrixData).map(([region, envs]) => (
+                  <div key={region} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+                    <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center">
+                      <div className="flex items-center gap-2 font-bold text-slate-700">
+                        <MapPin size={16} className="text-blue-500" />
+                        {region}
+                      </div>
+                      <span className="text-xs text-slate-400">{envs.length} 環境</span>
+                    </div>
 
-                             {/* Action Buttons for this Env */}
-                             {isDeployed && (
-                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                 {selectedApi.endpoints.map((ep, i) => {
-                                   const fullUrl = `${env.baseUrl}${ep.path}`;
-                                   const uniqueKey = `matrix-${env.id}-${i}`;
-                                   const isCopied = copiedKey === uniqueKey;
-                                   return (
-                                     <button
-                                       key={i}
-                                       onClick={() => copyToClipboard(fullUrl, uniqueKey)}
-                                       className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${
-                                         isCopied 
-                                           ? 'bg-green-50 text-green-700 border-green-200' 
-                                           : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600'
-                                       }`}
-                                       title={`${ep.method} ${ep.path}`}
-                                     >
-                                       {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                                       <span className="truncate max-w-[80px]">{ep.label}</span>
-                                     </button>
-                                   )
-                                 })}
-                               </div>
-                             )}
-                           </div>
-                         );
-                       })}
-                     </div>
-                   </div>
-                 ))}
-               </div>
-               
-               {Object.keys(apiMatrixData).length === 0 && (
-                 <div className="text-center py-20 text-slate-400">
-                   <Activity size={48} className="mx-auto mb-4 opacity-20" />
-                   <p>在此條件下找不到任何已部署的環境</p>
-                 </div>
-               )}
+                    <div className="divide-y divide-slate-100">
+                      {envs.map(env => {
+                        const isDeployed = env.isDeployed;
+                        return (
+                          <div key={env.id} className={`p-4 flex flex-col gap-3 transition-colors ${isDeployed ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50'}`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <span className={`w-2 h-2 rounded-full ${isDeployed ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-slate-300'}`} />
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm text-slate-800">{env.name}</span>
+                                    <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
+                                  </div>
+                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{env.baseUrl}</div>
+                                </div>
+                              </div>
+                              {!isDeployed && <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-100 rounded">未部署</span>}
+                            </div>
+
+                            {/* Action Buttons for this Env */}
+                            {isDeployed && (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {selectedApi.endpoints.map((ep, i) => {
+                                  const fullUrl = `${env.baseUrl}${ep.path}`;
+                                  const uniqueKey = `matrix-${env.id}-${i}`;
+                                  const isCopied = copiedKey === uniqueKey;
+                                  return (
+                                    <button
+                                      key={i}
+                                      onClick={() => copyToClipboard(fullUrl, uniqueKey)}
+                                      className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${isCopied
+                                        ? 'bg-green-50 text-green-700 border-green-200'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600'
+                                        }`}
+                                      title={`${ep.method} ${ep.path}`}
+                                    >
+                                      {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                                      <span className="truncate max-w-[80px]">{ep.label}</span>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {Object.keys(apiMatrixData).length === 0 && (
+                <div className="text-center py-20 text-slate-400">
+                  <Activity size={48} className="mx-auto mb-4 opacity-20" />
+                  <p>在此條件下找不到任何已部署的環境</p>
+                </div>
+              )}
             </div>
           )}
 
