@@ -2,7 +2,7 @@
 
 **API Deployment Explorer** is a modern, interactive dashboard designed to visualize and manage API service deployments across multiple regions and environments (PRD, STG, UAT).
 
-![Dashboard Screenshot](https://via.placeholder.com/800x450?text=ServiceDeck+Dashboard)
+<img width="1895" height="920" alt="image" src="https://github.com/user-attachments/assets/753a9205-0bd3-48ff-9336-8a8d69b10d5a" />
 
 ## 🚀 Features
 
