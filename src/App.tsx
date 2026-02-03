@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink, Filter } from 'lucide-react';
 
 // --- Interfaces ---
 
@@ -20,6 +20,7 @@ interface APIService {
   id: string;
   category: string;
   name: string;
+  scope?: 'REGION' | 'CLUSTER'; // New field
   urlKey: string;
   urlOverrides?: Record<string, string>;
   description: string;
@@ -31,10 +32,12 @@ interface APIService {
 interface Environment {
   id: string;
   region: string;
-  name: string;
+  name: string; // Now acts as Cluster Name (Unique)
+  displayName?: string; // New field for UI display (e.g. PRD1)
   type: string;
   rawType: string;
   urlPattern: string;
+  regionalUrlPattern?: string; // New field for Regional APIs
   isDeployed?: boolean; // dynamic property
 }
 
@@ -48,8 +51,9 @@ const checkApiAvailability = (api: APIService, env: Environment | undefined) => 
   if (excludeTypes && (excludeTypes.includes(env.rawType) || excludeTypes.includes(env.type))) return false;
   if (onlyRegions && !onlyRegions.includes(env.region)) return false;
   if (onlyTypes && !onlyTypes.includes(env.rawType) && !onlyTypes.includes(env.type)) return false;
-  if (onlyRegions && !onlyRegions.includes(env.region)) return false;
-  if (onlyTypes && !onlyTypes.includes(env.rawType) && !onlyTypes.includes(env.type)) return false;
+
+  // Regional API implies availability in the region (simplified logic, usually implies it exists)
+  // For now, allow deployRules to control it still.
   return true;
 };
 
@@ -58,6 +62,22 @@ const resolveUrl = (api: APIService, env: Environment | undefined) => {
   if (api.urlOverrides && api.urlOverrides[env.id]) {
     return api.urlOverrides[env.id];
   }
+
+  // Regional API Resolution
+  if (api.scope === 'REGION') {
+    if (env.regionalUrlPattern) {
+      let url = env.regionalUrlPattern;
+      url = url.replace('{api}', api.urlKey || '');
+      url = url.replace('{region}', env.region);
+      // Regional URLs should usually NOT contain {type} or {rawType} as they are shared across types
+      return url;
+    }
+    // Fallback? Or return empty?
+    // If no regional pattern is defined, we might fall back to standard but that might be wrong.
+    // Let's assume for now we fall back to standard but it might be incorrect. 
+    // Ideally user provided regionalUrlPattern.
+  }
+
   if (!env.urlPattern) return '';
   let url = env.urlPattern;
   url = url.replace('{api}', api.urlKey || '');
@@ -75,6 +95,200 @@ const METHOD_COLORS: Record<string, string> = {
   DELETE: 'bg-red-100 text-red-700 border-red-200',
   PATCH: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   DEFAULT: 'bg-slate-100 text-slate-700 border-slate-200'
+};
+
+const MultiSelect = ({
+  label,
+  options,
+  selected,
+  onChange,
+  icon: Icon
+}: {
+  label: string,
+  options: string[],
+  selected: string[],
+  onChange: (val: string[]) => void,
+  icon?: any
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Focus input and reset search when opening
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    } else {
+      setTimeout(() => setSearchTerm(''), 200);
+    }
+  }, [isOpen]);
+
+  // Logic Helpers
+  const realOptions = useMemo(() => options.filter(o => o !== 'ALL'), [options]);
+
+  const filteredOptions = useMemo(() =>
+    realOptions.filter(o => o.toLowerCase().includes(searchTerm.toLowerCase())),
+    [realOptions, searchTerm]
+  );
+
+  const isOptionSelected = (opt: string) => {
+    return selected.includes('ALL') || selected.includes(opt);
+  };
+
+  const areAllFilteredSelected = filteredOptions.length > 0 && filteredOptions.every(isOptionSelected);
+
+  // Handlers
+  const handleToggleSingle = (option: string) => {
+    let newSelection: string[];
+
+    // Expand 'ALL' to real items if needed
+    const currentItems = selected.includes('ALL') ? [...realOptions] : [...selected];
+
+    if (currentItems.includes(option)) {
+      // Remove
+      newSelection = currentItems.filter(item => item !== option);
+    } else {
+      // Add
+      newSelection = [...currentItems, option];
+    }
+
+    // Check if we should collapse to ALL
+    if (newSelection.length >= realOptions.length) {
+      onChange(['ALL']);
+    } else {
+      onChange(newSelection);
+    }
+  };
+
+  const handleToggleSelectAll = () => {
+    // [Drill-Down UX]
+    // If we are searching and currently have 'ALL' selected, 
+    // interacting with "Select All Search Results" implies the user wants to narrow down to these results,
+    // rather than deselecting them from the global set (which is the standard toggle behavior).
+    if (selected.includes('ALL') && searchTerm) {
+      if (areAllFilteredSelected) {
+        // If they are strictly all filtered selected (and we are in ALL), 
+        // normally this would deselect.
+        // But here we want to "Isolate".
+        // Use Case: User wants to see ONLY these.
+        // But what if they check it again? 
+        // If they click it when it looks checked (part of ALL), we switch to ONLY these.
+        // Wait, if we switch to ONLY these, they remain checked. Visually no change in the dropdown for these items,
+        // but HUGE change for the rest (unchecked).
+        onChange([...filteredOptions]);
+        return;
+      }
+    }
+
+    // Expand 'ALL' to real items for manipulation
+    let currentItems = selected.includes('ALL') ? [...realOptions] : [...selected];
+
+    if (areAllFilteredSelected) {
+      // Deselect all filtered items
+      currentItems = currentItems.filter(item => !filteredOptions.includes(item));
+    } else {
+      // Select all filtered items
+      const toAdd = filteredOptions.filter(item => !currentItems.includes(item));
+      currentItems = [...currentItems, ...toAdd];
+    }
+
+    // Check if we should collapse to ALL
+    if (currentItems.length >= realOptions.length) {
+      onChange(['ALL']);
+    } else {
+      onChange(currentItems);
+    }
+  };
+
+  const displayText = selected.includes('ALL')
+    ? `所有${label}`
+    : `${label} (${selected.length})`;
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${isOpen || !selected.includes('ALL')
+          ? 'bg-blue-50 text-blue-700 border-blue-200'
+          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+          }`}
+      >
+        {Icon && <Icon size={14} className={!selected.includes('ALL') ? 'text-blue-500' : 'text-slate-400'} />}
+        <span>{displayText}</span>
+        <ChevronDown size={12} className={`ml-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+
+          {/* Search Header */}
+          <div className="p-2 border-b border-slate-100 bg-slate-50">
+            <div className="relative">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="搜尋..."
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-slate-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Select All Option (Contextual) */}
+          <button
+            onClick={handleToggleSelectAll}
+            className={`flex items-center gap-2 px-3 py-2 text-xs w-full text-left transition-colors border-b border-slate-100 ${areAllFilteredSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'
+              }`}
+          >
+            <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${areAllFilteredSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300 bg-white'
+              }`}>
+              {areAllFilteredSelected && <Check size={10} className="text-white" />}
+            </div>
+            <span className="italic">{searchTerm ? `全選搜尋結果 (${filteredOptions.length})` : '全選 (ALL)'}</span>
+          </button>
+
+          {/* Options List */}
+          <div className="max-h-60 overflow-y-auto scrollbar-thin p-1">
+            {filteredOptions.length === 0 ? (
+              <div className="text-center py-4 text-xs text-slate-400">沒有相符的項目</div>
+            ) : (
+              filteredOptions.map(option => {
+                const isSelected = isOptionSelected(option);
+                return (
+                  <button
+                    key={option}
+                    onClick={() => handleToggleSingle(option)}
+                    className={`flex items-center gap-2 px-3 py-2 text-xs rounded-md w-full text-left transition-colors ${isSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                  >
+                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-slate-300'
+                      }`}>
+                      {isSelected && <Check size={10} className="text-white" />}
+                    </div>
+                    <span className="truncate">{option}</span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const App = () => {
@@ -103,6 +317,10 @@ const App = () => {
 
   const [configEnvs, setConfigEnvs] = useState('');
   const [configApis, setConfigApis] = useState('');
+
+  // Filters (Multi-select)
+  const [regionFilter, setRegionFilter] = useState<string[]>(['ALL']);
+  const [nameFilter, setNameFilter] = useState<string[]>(['ALL']);
 
   // Fetch Config on Mount
   useEffect(() => {
@@ -133,6 +351,20 @@ const App = () => {
       });
   }, []);
 
+  // --- Derived Options for Filters ---
+  const uniqueRegions = useMemo(() =>
+    ['ALL', ...new Set(environments.map(e => e.region))].sort(),
+    [environments]);
+
+  const uniqueNames = useMemo(() => {
+    const filteredEnvs = regionFilter.includes('ALL')
+      ? environments
+      : environments.filter(e => regionFilter.includes(e.region));
+
+    return ['ALL', ...new Set(filteredEnvs.map(e => e.name))].sort();
+  }, [environments, regionFilter]);
+
+
   // --- 計算邏輯：環境視角 ---
   const selectedEnv = useMemo(() =>
     environments.find(e => e.id === selectedEnvId) || environments[0],
@@ -141,17 +373,29 @@ const App = () => {
   const groupedEnvs = useMemo(() => {
     if (viewMode !== 'env') return {};
     const searchLower = searchQuery.toLowerCase();
-    const filtered = environments.filter(env =>
-      env.region.toLowerCase().includes(searchLower) ||
-      env.name.toLowerCase().includes(searchLower)
-    );
+
+    // Apply Filters
+    const filtered = environments.filter(env => {
+      const display = env.displayName || env.name;
+      const matchesSearch = env.region.toLowerCase().includes(searchLower) ||
+        display.toLowerCase().includes(searchLower) ||
+        env.name.toLowerCase().includes(searchLower);
+
+      const matchesRegion = regionFilter.includes('ALL') || regionFilter.includes(env.region);
+      const matchesName = nameFilter.includes('ALL') || nameFilter.includes(env.name);
+
+      // console.log(`Env ${env.name}: Search=${matchesSearch}, Region=${matchesRegion}, Name=${matchesName}`);
+
+      return matchesSearch && matchesRegion && matchesName;
+    });
+
     const groups: Record<string, Environment[]> = {};
     filtered.forEach(env => {
       if (!groups[env.region]) groups[env.region] = [];
       groups[env.region].push(env);
     });
     return groups;
-  }, [environments, searchQuery, viewMode]);
+  }, [environments, searchQuery, viewMode, regionFilter, nameFilter]);
 
   const envViewApis = useMemo(() => {
     if (viewMode !== 'env') return {};
@@ -205,21 +449,28 @@ const App = () => {
 
   const apiMatrixData = useMemo(() => {
     if (viewMode !== 'api') return {};
-    // Group all environments by region to show the matrix
+
+    // 1. Filter Environments based on Region/Name filters
+    const filteredEnvs = environments.filter(env =>
+      (regionFilter.includes('ALL') || regionFilter.includes(env.region)) &&
+      (nameFilter.includes('ALL') || nameFilter.includes(env.name))
+    );
+
+    // Group filtered environments by region to show the matrix
     const groups: Record<string, Environment[]> = {};
 
-    // Sort regions naturally
-    const sortedRegions = [...new Set(environments.map(e => e.region))].sort();
+    // Sort regions naturally from the filtered set
+    const sortedRegions = [...new Set(filteredEnvs.map(e => e.region))].sort();
 
     sortedRegions.forEach(region => {
-      const regionEnvs = environments.filter(e => e.region === region);
+      const regionEnvs = filteredEnvs.filter(e => e.region === region);
       // Process each env against selectedApi
       const processedEnvs = regionEnvs.map(env => ({
         ...env,
         isDeployed: checkApiAvailability(selectedApi, env)
       }));
 
-      // Filter if needed
+      // Filter if needed (Deployment Status)
       const visibleEnvs = hideUndeployed
         ? processedEnvs.filter(e => e.isDeployed)
         : processedEnvs;
@@ -229,7 +480,7 @@ const App = () => {
       }
     });
     return groups;
-  }, [environments, selectedApi, hideUndeployed, viewMode]);
+  }, [environments, selectedApi, hideUndeployed, viewMode, regionFilter, nameFilter]);
 
 
   // --- Actions ---
@@ -384,7 +635,7 @@ const App = () => {
                         onClick={() => setSelectedEnvId(env.id)}
                         className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between ${selectedEnvId === env.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
                       >
-                        <span className="font-medium truncate">{env.name}</span>
+                        <span className="font-medium truncate">{env.displayName || env.name}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded opacity-90 ${selectedEnvId === env.id ? 'bg-white/20 text-white' : getEnvColor(env.type)}`}>
                           {env.type}
                         </span>
@@ -454,6 +705,7 @@ const App = () => {
                 <>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
                     <Layers size={12} /> {selectedApi?.category}
+                    {selectedApi?.scope === 'REGION' && <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 rounded border border-purple-200">區域性服務</span>}
                     {selectedApi?.deployRules && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 rounded border border-amber-200">特殊部署規則</span>}
                   </div>
                   <h1 className="text-lg font-bold text-slate-800 truncate">{selectedApi?.name} <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi?.description}</span></h1>
@@ -463,6 +715,22 @@ const App = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* New Filters (Multi-Select) */}
+            <div className="flex items-center gap-2 border-r border-slate-200 pr-3 hidden md:flex">
+              <MultiSelect
+                label="區域"
+                options={uniqueRegions}
+                selected={regionFilter}
+                onChange={setRegionFilter}
+                icon={Filter}
+              />
+              <MultiSelect
+                label="Cluster"
+                options={uniqueNames}
+                selected={nameFilter}
+                onChange={setNameFilter}
+              />
+            </div>
             <button
               onClick={() => setHideUndeployed(!hideUndeployed)}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${hideUndeployed ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
@@ -508,8 +776,11 @@ const App = () => {
                         <div key={api.id} className={`flex flex-col rounded-xl border shadow-sm transition-all overflow-hidden ${isAvailable ? 'bg-white border-slate-200 hover:shadow-lg hover:border-blue-300' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
                           <div className={`p-4 border-b border-slate-100 ${isAvailable ? 'bg-white' : 'bg-slate-100/50'}`}>
                             <div className="flex justify-between items-start mb-2">
-                              <h4 className={`font-bold text-base truncate pr-2 ${isAvailable ? 'text-slate-800' : 'text-slate-500'}`}>{api.name}</h4>
-                              {!isAvailable && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full flex items-center gap-1"><Ban size={10} /> 未部署</span>}
+                              <div className="flex flex-col min-w-0 pr-2">
+                                <h4 className={`font-bold text-base truncate ${isAvailable ? 'text-slate-800' : 'text-slate-500'}`}>{api.name}</h4>
+                                {api.scope === 'REGION' && <span className="text-[9px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 w-fit mt-0.5">區域性</span>}
+                              </div>
+                              {!isAvailable && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full flex items-center gap-1 shrink-0"><Ban size={10} /> 未部署</span>}
                             </div>
                             <p className="text-xs text-slate-500 line-clamp-2 h-8">{api.description || '暫無描述'}</p>
 

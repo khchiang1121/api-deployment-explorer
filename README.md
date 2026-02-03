@@ -1,18 +1,25 @@
 # API Deployment Explorer
 
-**API Deployment Explorer** is a modern, interactive dashboard designed to visualize and manage API service deployments across multiple regions and environments (PRD, STG, UAT).
+**API Deployment Explorer** is a modern, interactive dashboard designed to visualize and manage API service deployments across multiple regions and environments.
 
 <img width="1895" height="920" alt="image" src="https://github.com/user-attachments/assets/753a9205-0bd3-48ff-9336-8a8d69b10d5a" />
 
-## 🚀 Features
+## ✨ Features
 
--   **Multi-View Visualization**:
-    -   **Environment View**: Browse APIs by Region and Environment (PRD, STG, etc.).
-    -   **API Panorama**: View a matrix of where specific services are deployed across all regions.
--   **Smart Search**: Filter by region, service name, or API endpoint path.
--   **Interactive & Responsive**: Built with React and Tailwind CSS for a premium feel.
--   **Clipboard Integration**: Quickly copy API endpoints with environment-specific base URLs.
--   **Configuration Management**: JSON-based import/export for environment and service definitions.
+* **Unified API Dashboard**
+  View all API deployments across regions and environments (PRD, STG, etc.) in one place.
+* **Multi-View Visualization**
+  Switch between environment-based browsing and a global service deployment matrix.
+* **Smart Search & Filtering**
+  Instantly find APIs by service name, region, or endpoint path.
+* **Region & Cluster-Aware URLs**
+  Automatically resolves correct endpoints for region-wide or cluster-specific deployments.
+* **Config-Driven Setup**
+  Manage environments and services via an external `config.json` with import/export support.
+* **One-Click Copy**
+  Copy full, environment-specific API URLs to the clipboard instantly.
+* **Modern UI**
+  Built with React and Tailwind CSS, featuring a responsive layout, dark mode, and a premium look.
 
 ## 🛠 Tech Stack
 
