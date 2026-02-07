@@ -36,15 +36,14 @@ interface APIService {
 }
 
 interface Environment {
-  id: string;
+  id: string; // Generated internally: `${region}-${name}`
   region: string;
-  name: string; // Now acts as Cluster Name (Unique)
-  displayName?: string; // New field for UI display (e.g. PRD1)
+  name: string; // Cluster Name (e.g. "STG1")
+  // displayName?: string;
   type: string;
-  rawType: string;
   urlPattern: string;
-  regionalUrlPattern?: string; // New field for Regional APIs
-  isDeployed?: boolean; // dynamic property
+  regionalUrlPattern?: string;
+  isDeployed?: boolean;
 }
 
 // 檢查 API 是否在特定環境可用
@@ -65,9 +64,9 @@ const checkApiAvailability = (api: APIService, env: Environment | undefined) => 
 
   const { onlyRegions, onlyTypes, excludeRegions, excludeTypes } = api.deployRules;
   if (excludeRegions && excludeRegions.includes(env.region)) return false;
-  if (excludeTypes && (excludeTypes.includes(env.rawType) || excludeTypes.includes(env.type))) return false;
+  if (excludeTypes && (excludeTypes.includes(env.name) || excludeTypes.includes(env.type))) return false;
   if (onlyRegions && !onlyRegions.includes(env.region)) return false;
-  if (onlyTypes && !onlyTypes.includes(env.rawType) && !onlyTypes.includes(env.type)) return false;
+  if (onlyTypes && !onlyTypes.includes(env.name) && !onlyTypes.includes(env.type)) return false;
 
   // Regional API implies availability in the region (simplified logic, usually implies it exists)
   // For now, allow deployRules to control it still.
@@ -76,6 +75,8 @@ const checkApiAvailability = (api: APIService, env: Environment | undefined) => 
 
 const resolveUrl = (api: APIService, env: Environment | undefined) => {
   if (!env) return '';
+
+  // Use Random ID directly (No attribute dependency)
   if (api.urlOverrides && api.urlOverrides[env.id]) {
     return api.urlOverrides[env.id];
   }
@@ -89,10 +90,6 @@ const resolveUrl = (api: APIService, env: Environment | undefined) => {
       // Regional URLs should usually NOT contain {type} or {rawType} as they are shared across types
       return url;
     }
-    // Fallback? Or return empty?
-    // If no regional pattern is defined, we might fall back to standard but that might be wrong.
-    // Let's assume for now we fall back to standard but it might be incorrect. 
-    // Ideally user provided regionalUrlPattern.
   }
 
   if (!env.urlPattern) return '';
@@ -100,7 +97,7 @@ const resolveUrl = (api: APIService, env: Environment | undefined) => {
   url = url.replace('{api}', api.urlKey || '');
   url = url.replace('{region}', env.region);
   url = url.replace('{type}', env.type);
-  url = url.replace('{rawType}', env.rawType);
+  url = url.replace('{rawType}', env.name); // Compatibility: {rawType} now maps to name
   return url;
 };
 
@@ -349,7 +346,12 @@ const App = () => {
         return res.json();
       })
       .then(data => {
-        setEnvironments(data.envs);
+        // Process Environments: Generate Random Unique ID
+        const processedEnvs = data.envs.map((env: any) => ({
+          ...env,
+          id: self.crypto.randomUUID ? self.crypto.randomUUID() : `env-${Math.random().toString(36).substr(2, 9)}`,
+        }));
+        setEnvironments(processedEnvs);
 
         // Process APIs to ensure they have IDs
         const processedApis = data.apis.map((api: any, index: number) => ({
@@ -979,6 +981,7 @@ const App = () => {
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
+                                    <span className="text-xs font-bold text-slate-700">{env.name}</span>
                                   </div>
                                   <div className="text-[10px] text-slate-400 font-mono mt-0.5">{resolveUrl(selectedApi, env)}</div>
                                 </div>

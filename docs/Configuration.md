@@ -25,10 +25,8 @@
 
 | 欄位 | 類型 | 說明 | 範例 |
 | :--- | :--- | :--- | :--- |
-| `id` | `string` | 唯一識別碼 | `"F20-PRD1"` |
 | `region` | `string` | 所屬區域 (Region) | `"F20"`, `"Global"` |
-| `name` | `string` | 識別名稱 (通常等於 ID) | `"F20-PRD1"` |
-| `displayName` | `string` | 顯示名稱 (UI 顯示用) | `"PRD1"` |
+| `name` | `string` | **Cluster Name** (叢集名稱) | `"STG1"`, `"PRD1"` |
 | `type` | `string` | 環境類型 (分組用) | `"PRD"`, `"STG"`, `"QA"` |
 | `urlPattern` | `string` | **預設 URL 模式**。<br>支援變數：`{api}`, `{region}`, `{type}` | `"https://{api}.app.{type}.{region}.com"` |
 | `regionalUrlPattern` | `string` | **區域性 URL 模式** (選填)。<br>當 API scope 為 `REGION` 時使用。 | `"https://{api}.app.{region}.com"` |
@@ -39,8 +37,8 @@
 
 ```json
 {
-  "id": "Global-PRD",
   "region": "Global",
+  "name": "Global-PRD",
   "type": "PRD",
   "urlPattern": "https://{api}.global.prd.com"
   ...
@@ -57,7 +55,6 @@
 
 | 欄位 | 類型 | 說明 |
 | :--- | :--- | :--- |
-
 | `name` | `string` | 服務名稱 |
 | `category` | `string` | 分類 (UI 分組用) |
 | `description` | `string` | 簡短描述 |
@@ -107,9 +104,11 @@
 
 若特定環境的 URL 不符合通用的 Pattern，可使用 `urlOverrides` 直接指定完整 URL。
 
+**注意**：目前由於使用隨機 ID 機制，靜態配置檔中的 Overrides 可能無法正確對應到隨機生成的環境 ID。僅在系統依賴屬性查表時有效。
+
 ```json
 "urlOverrides": {
-  "F20-PRD1": "https://custom-url.internal.com/api"
+  "REGION-NAME": "https://custom-url.internal.com/api"
 }
 ```
 
@@ -122,4 +121,4 @@
 - `{api}`: 對應 API 的 `urlKey`。
 - `{region}`: 對應 Environment 的 `region`。
 - `{type}`: 對應 Environment 的 `type` (如 `PRD`)。
-- `{rawType}`: 對應 Environment 的 `rawType` (如 `PRD1`)。
+- `{rawType}`: **已棄用** (同 `name`)。
