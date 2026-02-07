@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink, Filter } from 'lucide-react';
+import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink, Filter, Globe2 } from 'lucide-react';
 
 // --- Interfaces ---
 
@@ -20,7 +20,7 @@ interface APIService {
   id: string;
   category: string;
   name: string;
-  scope?: 'REGION' | 'CLUSTER'; // New field
+  scope?: 'REGION' | 'CLUSTER' | 'GLOBAL'; // New field
   urlKey: string;
   urlOverrides?: Record<string, string>;
   description: string;
@@ -43,8 +43,19 @@ interface Environment {
 
 // 檢查 API 是否在特定環境可用
 const checkApiAvailability = (api: APIService, env: Environment | undefined) => {
-  if (!api.deployRules) return true;
   if (!env) return false;
+
+  // Global API Logic: ONLY available in "Global" region
+  if (api.scope === 'GLOBAL') {
+    return env.region === 'Global';
+  }
+
+  // Non-Global APIs should NOT appear in "Global" region (Optional, but cleaner)
+  if (env.region === 'Global') {
+    return false;
+  }
+
+  if (!api.deployRules) return true;
 
   const { onlyRegions, onlyTypes, excludeRegions, excludeTypes } = api.deployRules;
   if (excludeRegions && excludeRegions.includes(env.region)) return false;
@@ -298,8 +309,8 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // View Mode: 'env' (Environment Centric) | 'api' (API Matrix Centric)
-  const [viewMode, setViewMode] = useState<'env' | 'api'>('env');
+  // View Mode: 'env' (Environment Centric) | 'api' (API Matrix Centric) | 'global' (Global Services)
+  const [viewMode, setViewMode] = useState<'env' | 'api' | 'global'>('env');
 
   // Selected States
   const [selectedEnvId, setSelectedEnvId] = useState<string>('');
@@ -384,6 +395,9 @@ const App = () => {
       const matchesRegion = regionFilter.includes('ALL') || regionFilter.includes(env.region);
       const matchesName = nameFilter.includes('ALL') || nameFilter.includes(env.name);
 
+      // Hide Global Region in 'env' view
+      if (env.region === 'Global') return false;
+
       // console.log(`Env ${env.name}: Search=${matchesSearch}, Region=${matchesRegion}, Name=${matchesName}`);
 
       return matchesSearch && matchesRegion && matchesName;
@@ -413,6 +427,10 @@ const App = () => {
           api.endpoints.some(ep => ep.path.toLowerCase().includes(searchLower));
 
         if (hideUndeployed && !api.isAvailable) return false;
+
+        // Hide Global APIs in 'env' view
+        if (api.scope === 'GLOBAL') return false;
+
         return matchesSearch;
       });
 
@@ -427,16 +445,26 @@ const App = () => {
 
 
   // --- 計算邏輯：API 全景視角 ---
-  const selectedApi = useMemo(() =>
-    apis.find(a => a.id === selectedApiId) || apis[0],
-    [apis, selectedApiId]);
+  const selectedApi = useMemo(() => {
+    // If in Global mode, ensure selected API is Global
+    if (viewMode === 'global') {
+      const globalApis = apis.filter(a => a.scope === 'GLOBAL');
+      const current = globalApis.find(a => a.id === selectedApiId);
+      return current || globalApis[0] || null;
+    }
+    // If in API mode, ensure selected API is NOT Global (or at least valid)
+    const normalApis = apis.filter(a => a.scope !== 'GLOBAL');
+    const current = normalApis.find(a => a.id === selectedApiId);
+    return current || normalApis[0] || apis[0];
+  }, [apis, selectedApiId, viewMode]);
 
   const groupedApisForSidebar = useMemo(() => {
     if (viewMode !== 'api') return {};
     const searchLower = searchQuery.toLowerCase();
     const filtered = apis.filter(api =>
-      api.name.toLowerCase().includes(searchLower) ||
-      api.category.toLowerCase().includes(searchLower)
+      (api.name.toLowerCase().includes(searchLower) ||
+        api.category.toLowerCase().includes(searchLower)) &&
+      api.scope !== 'GLOBAL' // Hide Global APIs in 'api' view
     );
     const groups: Record<string, APIService[]> = {};
     filtered.forEach(api => {
@@ -510,11 +538,20 @@ const App = () => {
     setter(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Switch Mode Reset
+  // Switch Mode Handler
   useEffect(() => {
     setSearchQuery('');
     setContentSearch('');
-  }, [viewMode]);
+
+    // Auto-select first item when switching modes
+    if (viewMode === 'global') {
+      const firstGlobal = apis.find(a => a.scope === 'GLOBAL');
+      if (firstGlobal) setSelectedApiId(firstGlobal.id);
+    } else if (viewMode === 'api') {
+      const firstNormal = apis.find(a => a.scope !== 'GLOBAL');
+      if (firstNormal) setSelectedApiId(firstNormal.id);
+    }
+  }, [viewMode, apis]);
 
   const openConfig = () => {
     setConfigEnvs(JSON.stringify(environments, null, 2));
@@ -592,6 +629,13 @@ const App = () => {
           >
             <LayoutGrid size={16} /> API 全景
           </button>
+          <button
+            onClick={() => setViewMode('global')}
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'global' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
+              }`}
+          >
+            <Globe2 size={16} /> 全域服務
+          </button>
         </div>
 
         {/* Sidebar Header */}
@@ -610,6 +654,26 @@ const App = () => {
 
         {/* Sidebar List */}
         <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
+
+          {/* Global Mode Sidebar List */}
+          {viewMode === 'global' && (
+            <div className="space-y-1">
+              {apis.filter(api => api.scope === 'GLOBAL').map(api => (
+                <button
+                  key={api.id}
+                  onClick={() => setSelectedApiId(api.id)}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between group ${selectedApiId === api.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                >
+                  <span className="font-medium truncate">{api.name}</span>
+                </button>
+              ))}
+              {apis.filter(api => api.scope === 'GLOBAL').length === 0 && (
+                <div className="text-center py-8 text-slate-400 text-xs">
+                  沒有全域服務
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Environment Mode Sidebar List */}
           {viewMode === 'env' && Object.entries(groupedEnvs).map(([regionName, envList]) => {
@@ -690,22 +754,30 @@ const App = () => {
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm shrink-0 z-10">
           <div className="flex items-center gap-4 min-w-0">
             <div className={`p-2 rounded-lg shadow-sm text-white ${viewMode === 'env' && selectedEnv?.name.includes('PRD') ? 'bg-slate-800' : 'bg-blue-600'}`}>
-              {viewMode === 'env' ? <Server size={20} /> : <Database size={20} />}
+              {viewMode === 'env' ? <Server size={20} /> : viewMode === 'global' ? <Globe2 size={20} /> : <Database size={20} />}
             </div>
             <div className="min-w-0">
-              {viewMode === 'env' ? (
+              {viewMode === 'global' ? (
+                <>
+                  <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
+                    <Globe2 size={12} /> 全域服務
+                  </div>
+                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedApi?.name} <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi?.description}</span></h1>
+                </>
+              ) : viewMode === 'env' ? (
                 <>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
                     <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} />
                     <span className={`px-1.5 rounded text-[10px] font-bold border ${getEnvColor(selectedEnv?.type)}`}>{selectedEnv?.type}</span>
                   </div>
-                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedEnv?.urlPattern} (Template)</h1>
+                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedEnv?.urlPattern}</h1>
                 </>
               ) : (
                 <>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
                     <Layers size={12} /> {selectedApi?.category}
                     {selectedApi?.scope === 'REGION' && <span className="text-[10px] bg-purple-100 text-purple-800 px-1.5 rounded border border-purple-200">區域性服務</span>}
+                    {selectedApi?.scope === 'GLOBAL' && <span className="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 rounded border border-indigo-200">全域服務</span>}
                     {selectedApi?.deployRules && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 rounded border border-amber-200">特殊部署規則</span>}
                   </div>
                   <h1 className="text-lg font-bold text-slate-800 truncate">{selectedApi?.name} <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi?.description}</span></h1>
@@ -779,6 +851,7 @@ const App = () => {
                               <div className="flex flex-col min-w-0 pr-2">
                                 <h4 className={`font-bold text-base truncate ${isAvailable ? 'text-slate-800' : 'text-slate-500'}`}>{api.name}</h4>
                                 {api.scope === 'REGION' && <span className="text-[9px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 w-fit mt-0.5">區域性</span>}
+                                {api.scope === 'GLOBAL' && <span className="text-[9px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 w-fit mt-0.5">全域</span>}
                               </div>
                               {!isAvailable && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full flex items-center gap-1 shrink-0"><Ban size={10} /> 未部署</span>}
                             </div>
@@ -916,6 +989,67 @@ const App = () => {
                   <p>在此條件下找不到任何已部署的環境</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* --- VIEW MODE: GLOBAL --- */}
+          {viewMode === 'global' && (
+            <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                {selectedApi ? (
+                  <>
+                    <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                      <Globe2 className="text-blue-500" size={24} />
+                      {selectedApi.name}
+                    </h2>
+                    <p className="text-slate-600 mb-6">{selectedApi.description}</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Environments List */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">部署環境</h3>
+                        {environments.filter(e => e.region === 'Global').map(env => (
+                          <div key={env.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 transition-colors hover:border-blue-200 hover:bg-blue-50/30">
+                            <div className="flex items-center gap-2">
+                              <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getEnvColor(env.type)}`}>{env.type}</span>
+                              <span className="text-sm font-medium text-slate-700">{env.displayName}</span>
+                            </div>
+                            <a href={resolveUrl(selectedApi, env)} target="_blank" rel="noopener noreferrer" className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors" title="Open Link">
+                              <ExternalLink size={16} />
+                            </a>
+                          </div>
+                        ))}
+                        {environments.filter(e => e.region === 'Global').length === 0 && (
+                          <p className="text-sm text-slate-400 italic">未設定全域環境</p>
+                        )}
+                      </div>
+
+                      {/* Endpoints List */}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">Endpoints</h3>
+                        <div className="space-y-2">
+                          {selectedApi.endpoints.map((ep, idx) => (
+                            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
+                              <span className={`px-2 py-1 rounded text-[10px] font-bold border w-14 text-center ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>
+                                {ep.method}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-semibold text-slate-700">{ep.label}</div>
+                                <div className="text-[10px] text-slate-500 font-mono truncate">{ep.path}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12 text-slate-400">
+                    <Globe2 size={48} className="mx-auto mb-4 opacity-20" />
+                    <p>請選擇一個全域服務</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

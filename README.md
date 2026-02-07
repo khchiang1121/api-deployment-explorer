@@ -54,6 +54,7 @@
 ## 🎨 Customization
 
 You can customize the default data in `src/App.tsx` (formerly `main.ts`) to match your organization's infrastructure.
+See the [Configuration Guide](docs/Configuration.md) for detailed instructions on `config.json`.
 
 ---
 
