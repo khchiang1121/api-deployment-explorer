@@ -9,6 +9,11 @@ interface Endpoint {
   path: string;
 }
 
+interface APIUrl {
+  label: string;
+  url: string;
+}
+
 interface DeployRules {
   onlyRegions?: string[];
   onlyTypes?: string[];
@@ -26,6 +31,7 @@ interface APIService {
   description: string;
   deployRules?: DeployRules | null;
   endpoints: Endpoint[];
+  urls?: APIUrl[]; // New field for Global APIs (Direct URLs)
   isAvailable?: boolean; // dynamic property
 }
 
@@ -316,6 +322,8 @@ const App = () => {
   const [selectedEnvId, setSelectedEnvId] = useState<string>('');
   const [selectedApiId, setSelectedApiId] = useState<string>('');
 
+  const [selectedGlobalUrlIndices, setSelectedGlobalUrlIndices] = useState<Record<string, number>>({}); // Map: API ID -> URL Index
+
   const [expandedRegions, setExpandedRegions] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
@@ -446,11 +454,12 @@ const App = () => {
 
   // --- 計算邏輯：API 全景視角 ---
   const selectedApi = useMemo(() => {
-    // If in Global mode, ensure selected API is Global
+    // If in Global mode, allow null (for "Show All" view)
     if (viewMode === 'global') {
       const globalApis = apis.filter(a => a.scope === 'GLOBAL');
+      if (selectedApiId === '') return null; // "Show All" selected
       const current = globalApis.find(a => a.id === selectedApiId);
-      return current || globalApis[0] || null;
+      return current || null;
     }
     // If in API mode, ensure selected API is NOT Global (or at least valid)
     const normalApis = apis.filter(a => a.scope !== 'GLOBAL');
@@ -545,13 +554,18 @@ const App = () => {
 
     // Auto-select first item when switching modes
     if (viewMode === 'global') {
-      const firstGlobal = apis.find(a => a.scope === 'GLOBAL');
-      if (firstGlobal) setSelectedApiId(firstGlobal.id);
+      setSelectedApiId(''); // Default to "Show All"
     } else if (viewMode === 'api') {
       const firstNormal = apis.find(a => a.scope !== 'GLOBAL');
       if (firstNormal) setSelectedApiId(firstNormal.id);
     }
+    // Reset global url index logic if needed, or just keep them
   }, [viewMode, apis]);
+
+  const getGlobalUrlIndex = (apiId: string) => selectedGlobalUrlIndices[apiId] || 0;
+  const setGlobalUrlIndex = (apiId: string, idx: number) => {
+    setSelectedGlobalUrlIndices(prev => ({ ...prev, [apiId]: idx }));
+  };
 
   const openConfig = () => {
     setConfigEnvs(JSON.stringify(environments, null, 2));
@@ -658,6 +672,17 @@ const App = () => {
           {/* Global Mode Sidebar List */}
           {viewMode === 'global' && (
             <div className="space-y-1">
+              <button
+                onClick={() => setSelectedApiId('')}
+                className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-3 ${selectedApiId === ''
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+              >
+                <LayoutGrid size={18} />
+                <span>所有全域服務</span>
+              </button>
+              <div className="h-px bg-slate-200 my-2 mx-1" />
               {apis.filter(api => api.scope === 'GLOBAL').map(api => (
                 <button
                   key={api.id}
@@ -762,7 +787,10 @@ const App = () => {
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
                     <Globe2 size={12} /> 全域服務
                   </div>
-                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedApi?.name} <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi?.description}</span></h1>
+                  <h1 className="text-lg font-bold text-slate-800 truncate">
+                    {selectedApi ? selectedApi.name : '所有全域服務'}
+                    {selectedApi && <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi.description}</span>}
+                  </h1>
                 </>
               ) : viewMode === 'env' ? (
                 <>
@@ -993,69 +1021,134 @@ const App = () => {
           )}
 
           {/* --- VIEW MODE: GLOBAL --- */}
+
           {viewMode === 'global' && (
             <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                {selectedApi ? (
-                  <>
-                    <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                      <Globe2 className="text-blue-500" size={24} />
-                      {selectedApi.name}
-                    </h2>
-                    <p className="text-slate-600 mb-6">{selectedApi.description}</p>
+              {(() => {
+                // Determine which APIs to show: Single Selected or All Global
+                const apisToShow = selectedApi
+                  ? [selectedApi]
+                  : apis.filter(a => a.scope === 'GLOBAL');
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Environments List */}
-                      <div className="space-y-4">
-                        <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">部署環境</h3>
-                        {environments.filter(e => e.region === 'Global').map(env => (
-                          <div key={env.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 transition-colors hover:border-blue-200 hover:bg-blue-50/30">
-                            <div className="flex items-center gap-2">
-                              <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getEnvColor(env.type)}`}>{env.type}</span>
-                              <span className="text-sm font-medium text-slate-700">{env.displayName}</span>
+                if (apisToShow.length === 0) {
+                  return (
+                    <div className="col-span-full text-center py-12 text-slate-400">
+                      <p>未設定全域服務</p>
+                    </div>
+                  );
+                }
+
+                return apisToShow.map(api => {
+                  const activeUrlIdx = getGlobalUrlIndex(api.id);
+
+                  return (
+                    <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                      <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Globe2 className="text-blue-500" size={24} />
+                          {api.name}
+                        </div>
+                      </h2>
+                      <p className="text-slate-600 mb-6">{api.description}</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">服務連結 (Service URLs)</h3>
+                          {api.urls && api.urls.length > 0 ? (
+                            <div className="space-y-2">
+                              {api.urls.map((urlItem, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => setGlobalUrlIndex(api.id, idx)}
+                                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all text-left group ${activeUrlIdx === idx
+                                    ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500 shadow-sm'
+                                    : 'bg-white border-slate-200 hover:border-blue-300'
+                                    }`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={`p-1.5 rounded-full ${activeUrlIdx === idx ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500'}`}>
+                                      <Globe2 size={16} />
+                                    </div>
+                                    <span className={`text-sm font-medium ${activeUrlIdx === idx ? 'text-blue-700' : 'text-slate-700'}`}>{urlItem.label}</span>
+                                  </div>
+                                  {activeUrlIdx === idx && <Check size={16} className="text-blue-600" />}
+                                </button>
+                              ))}
                             </div>
-                            <a href={resolveUrl(selectedApi, env)} target="_blank" rel="noopener noreferrer" className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors" title="Open Link">
-                              <ExternalLink size={16} />
-                            </a>
+                          ) : (
+                            <p className="text-sm text-slate-400 italic">未設定連結</p>
+                          )}
+                        </div>
+
+                        {/* Endpoints List */}
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">Endpoints</h3>
+                          <div className="space-y-2">
+                            {api.endpoints.map((ep, idx) => {
+                              // Resolve URL based on active index for THIS api
+                              const baseUrl = api.urls?.[activeUrlIdx]?.url;
+                              const fullUrl = baseUrl ? `${baseUrl}${ep.path}` : null;
+
+                              return (
+                                <div key={idx} className="flex items-center gap-2">
+                                  {fullUrl ? (
+                                    <a
+                                      href={fullUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex-1 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm transition-all group"
+                                      title={`Open: ${fullUrl}`}
+                                    >
+                                      <span className={`px-2 py-1 rounded text-[10px] font-bold border w-14 text-center ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>
+                                        {ep.method}
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-xs font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">{ep.label}</div>
+                                        <div className="text-[10px] text-slate-500 font-mono truncate">{ep.path}</div>
+                                      </div>
+                                      <ExternalLink size={14} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                                    </a>
+                                  ) : (
+                                    <div className="flex-1 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 opacity-60 cursor-not-allowed">
+                                      <span className={`px-2 py-1 rounded text-[10px] font-bold border w-14 text-center ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>
+                                        {ep.method}
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="text-xs font-semibold text-slate-700">{ep.label}</div>
+                                        <div className="text-[10px] text-slate-500 font-mono truncate">{ep.path}</div>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Copy Button */}
+                                  {fullUrl && (
+                                    <button
+                                      onClick={() => copyToClipboard(fullUrl, `${api.id}-${idx}`)}
+                                      className={`p-3 rounded-lg border transition-all ${copiedKey === `${api.id}-${idx}`
+                                        ? 'bg-green-50 text-green-700 border-green-200'
+                                        : 'bg-white text-slate-400 border-slate-200 hover:border-blue-300 hover:text-blue-600'
+                                        }`}
+                                      title="Copy URL"
+                                    >
+                                      {copiedKey === `${api.id}-${idx}` ? <Check size={18} /> : <Copy size={18} />}
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
-                        ))}
-                        {environments.filter(e => e.region === 'Global').length === 0 && (
-                          <p className="text-sm text-slate-400 italic">未設定全域環境</p>
-                        )}
-                      </div>
-
-                      {/* Endpoints List */}
-                      <div className="space-y-4">
-                        <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">Endpoints</h3>
-                        <div className="space-y-2">
-                          {selectedApi.endpoints.map((ep, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
-                              <span className={`px-2 py-1 rounded text-[10px] font-bold border w-14 text-center ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>
-                                {ep.method}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-semibold text-slate-700">{ep.label}</div>
-                                <div className="text-[10px] text-slate-500 font-mono truncate">{ep.path}</div>
-                              </div>
-                            </div>
-                          ))}
                         </div>
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="text-center py-12 text-slate-400">
-                    <Globe2 size={48} className="mx-auto mb-4 opacity-20" />
-                    <p>請選擇一個全域服務</p>
-                  </div>
-                )}
-              </div>
+                  );
+                });
+              })()}
             </div>
           )}
 
         </div>
 
-        {/* Config Modal (Same as before) */}
+
         {isConfigOpen && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
@@ -1076,9 +1169,10 @@ const App = () => {
               </div>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        )
+        }
+      </div >
+    </div >
   );
 };
 
