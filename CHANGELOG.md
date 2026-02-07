@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 ### Added
+- **Dark Mode**:
+  - Implemented full Dark Mode support with a system-aware theme toggle.
+  - Refined color palette to use neutral Slate/Gray tones for a cleaner, professional look (`dark:bg-gray-950`).
+  - Added persistence for user theme preference in `localStorage`.
+
+### Fixed
+- **Dark Mode UI Issues**:
+  - Resolved white background issue in API Matrix view.
+  - Corrected header color inconsistency in Dark Mode.
+  - Fixed visibility of text and buttons in "Endpoints Info" card.
+
+### Added
 - **URL State Persistence**: Application state (View Mode, Region, Cluster, API) is now synchronized with URL query parameters, enabling deep linking and sharing.
 
 ### Changed

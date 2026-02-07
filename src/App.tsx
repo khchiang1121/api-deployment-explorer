@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink, Filter, Globe2 } from 'lucide-react';
+import { Search, Copy, Check, Settings, Server, Database, X, Save, RotateCcw, ChevronRight, ChevronDown, MapPin, Globe, Ban, Eye, EyeOff, Layers, Activity, LayoutGrid, Loader2, ExternalLink, Filter, Globe2, Sun, Moon } from 'lucide-react';
 
 // --- Interfaces ---
 
@@ -108,7 +108,7 @@ const METHOD_COLORS: Record<string, string> = {
   PUT: 'bg-orange-100 text-orange-700 border-orange-200',
   DELETE: 'bg-red-100 text-red-700 border-red-200',
   PATCH: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  DEFAULT: 'bg-slate-100 text-slate-700 border-slate-200'
+  DEFAULT: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700'
 };
 
 const MultiSelect = ({
@@ -236,7 +236,7 @@ const MultiSelect = ({
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${isOpen || !selected.includes('ALL')
           ? 'bg-blue-50 text-blue-700 border-blue-200'
-          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'
           }`}
       >
         {Icon && <Icon size={14} className={!selected.includes('ALL') ? 'text-blue-500' : 'text-slate-400'} />}
@@ -248,7 +248,7 @@ const MultiSelect = ({
         <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-50 flex flex-col animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
 
           {/* Search Header */}
-          <div className="p-2 border-b border-slate-100 bg-slate-50">
+          <div className="p-2 border-b border-slate-100 bg-slate-50 dark:bg-gray-900 dark:border-gray-700">
             <div className="relative">
               <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -311,6 +311,28 @@ const App = () => {
   const [apis, setApis] = useState<APIService[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // --- Theme Management ---
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+      return localStorage.getItem('theme') as 'light' | 'dark';
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+  };
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   // --- URL State Management ---
   const getUrlParams = () => {
@@ -701,30 +723,30 @@ const App = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans overflow-hidden dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200">
 
       {/* --- Sidebar --- */}
-      <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg z-20">
+      <div className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg z-20 dark:bg-gray-900 dark:border-gray-800 transition-colors">
 
         {/* View Mode Toggle Tabs */}
-        <div className="flex border-b border-slate-200">
+        <div className="flex border-b border-slate-200 dark:border-gray-800">
           <button
             onClick={() => setViewMode('env')}
-            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'env' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'env' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-500' : 'text-slate-500 hover:bg-slate-50 dark:text-gray-400 dark:hover:bg-gray-800/50'
               }`}
           >
             <Globe size={16} /> 環境視角
           </button>
           <button
             onClick={() => setViewMode('api')}
-            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'api' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'api' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-500' : 'text-slate-500 hover:bg-slate-50 dark:text-gray-400 dark:hover:bg-gray-800/50'
               }`}
           >
             <LayoutGrid size={16} /> API 全景
           </button>
           <button
             onClick={() => setViewMode('global')}
-            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'global' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600' : 'text-slate-500 hover:bg-slate-50'
+            className={`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${viewMode === 'global' ? 'text-blue-600 bg-blue-50 border-b-2 border-blue-600 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-500' : 'text-slate-500 hover:bg-slate-50 dark:text-gray-400 dark:hover:bg-gray-800/50'
               }`}
           >
             <Globe2 size={16} /> 全域服務
@@ -732,13 +754,13 @@ const App = () => {
         </div>
 
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-slate-100 bg-slate-50 shrink-0">
+        <div className="p-4 border-b border-slate-100 bg-slate-50 shrink-0 dark:bg-gray-900 dark:border-gray-800">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
             <input
               type="text"
               placeholder={viewMode === 'env' ? "搜尋區域 / 環境..." : "搜尋 API 名稱..."}
-              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:placeholder-gray-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -746,7 +768,7 @@ const App = () => {
         </div>
 
         {/* Sidebar List */}
-        <div className="flex-1 overflow-y-auto p-2 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-2 scrollbar-thin dark:scrollbar-thumb-gray-700 dark:scrollbar-track-gray-800">
 
           {/* Global Mode Sidebar List */}
           {viewMode === 'global' && (
@@ -755,24 +777,24 @@ const App = () => {
                 onClick={() => setSelectedApiId('')}
                 className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-3 ${selectedApiId === ''
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-600 hover:bg-slate-100'
+                  : 'text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800'
                   }`}
               >
                 <LayoutGrid size={18} />
                 <span>所有全域服務</span>
               </button>
-              <div className="h-px bg-slate-200 my-2 mx-1" />
+              <div className="h-px bg-slate-200 my-2 mx-1 dark:bg-gray-700" />
               {apis.filter(api => api.scope === 'GLOBAL').map(api => (
                 <button
                   key={api.id}
                   onClick={() => setSelectedApiId(api.id)}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between group ${selectedApiId === api.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                  className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between group ${selectedApiId === api.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}`}
                 >
                   <span className="font-medium truncate">{api.name}</span>
                 </button>
               ))}
               {apis.filter(api => api.scope === 'GLOBAL').length === 0 && (
-                <div className="text-center py-8 text-slate-400 text-xs">
+                <div className="text-center py-8 text-slate-400 text-xs dark:text-gray-500">
                   沒有全域服務
                 </div>
               )}
@@ -787,21 +809,21 @@ const App = () => {
               <div key={regionName} className="mb-1">
                 <button
                   onClick={() => toggleSidebarGroup(regionName, 'region')}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg text-sm font-semibold transition-all ${isActiveRegion ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'}`}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg text-sm font-semibold transition-all ${isActiveRegion ? 'bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' : 'text-slate-700 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}
                 >
                   <div className="flex items-center gap-2">
-                    <MapPin size={16} className={isActiveRegion ? 'text-blue-600' : 'text-slate-400'} />
+                    <MapPin size={16} className={isActiveRegion ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'} />
                     <span>{regionName}</span>
                   </div>
                   {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                 </button>
                 {isExpanded && (
-                  <div className="ml-4 pl-3 border-l-2 border-slate-100 mt-1 space-y-1 mb-2">
+                  <div className="ml-4 pl-3 border-l-2 border-slate-100 mt-1 space-y-1 mb-2 dark:border-gray-700">
                     {envList.map(env => (
                       <button
                         key={env.id}
                         onClick={() => setSelectedEnvId(env.id)}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between ${selectedEnvId === env.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between ${selectedEnvId === env.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}`}
                       >
                         <span className="font-medium truncate">{env.displayName || env.name}</span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded opacity-90 ${selectedEnvId === env.id ? 'bg-white/20 text-white' : getEnvColor(env.type)}`}>
@@ -823,24 +845,23 @@ const App = () => {
               <div key={catName} className="mb-1">
                 <button
                   onClick={() => toggleSidebarGroup(catName, 'cat')}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg text-sm font-semibold transition-all ${isActiveCat ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'}`}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg text-sm font-semibold transition-all ${isActiveCat ? 'bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300' : 'text-slate-700 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-gray-800'}`}
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <Layers size={16} className={isActiveCat ? 'text-blue-600' : 'text-slate-400'} />
+                    <Layers size={16} className={isActiveCat ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'} />
                     <span className="truncate">{catName}</span>
                   </div>
-                  {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  {isExpanded ? <ChevronDown size={14} className="shrink-0" /> : <ChevronRight size={14} className="shrink-0" />}
                 </button>
                 {isExpanded && (
-                  <div className="ml-4 pl-3 border-l-2 border-slate-100 mt-1 space-y-1 mb-2">
+                  <div className="ml-4 pl-3 border-l-2 border-slate-100 mt-1 space-y-1 mb-2 dark:border-gray-700">
                     {apiList.map(api => (
                       <button
                         key={api.id}
                         onClick={() => setSelectedApiId(api.id)}
-                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between group ${selectedApiId === api.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                        className={`w-full text-left px-3 py-2 rounded-md text-sm transition-all flex items-center justify-between ${selectedApiId === api.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}`}
                       >
                         <span className="font-medium truncate">{api.name}</span>
-                        {api.deployRules && <span className={`w-2 h-2 rounded-full ${selectedApiId === api.id ? 'bg-blue-300' : 'bg-slate-300'}`} title="有特殊部署規則" />}
                       </button>
                     ))}
                   </div>
@@ -852,10 +873,10 @@ const App = () => {
       </div>
 
       {/* --- Main Content --- */}
-      <div className="flex-1 flex flex-col h-full bg-slate-50/50">
+      <div className="flex-1 flex flex-col h-full bg-slate-50/50 dark:bg-gray-950/50">
 
         {/* Header (Dynamic based on View Mode) */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm shrink-0 z-10">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm shrink-0 z-10 dark:bg-gray-900 dark:border-gray-800 transition-colors">
           <div className="flex items-center gap-4 min-w-0">
             <div className={`p-2 rounded-lg shadow-sm text-white ${viewMode === 'env' && selectedEnv?.name.includes('PRD') ? 'bg-slate-800' : 'bg-blue-600'}`}>
               {viewMode === 'env' ? <Server size={20} /> : viewMode === 'global' ? <Globe2 size={20} /> : <Database size={20} />}
@@ -866,9 +887,9 @@ const App = () => {
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
                     <Globe2 size={12} /> 全域服務
                   </div>
-                  <h1 className="text-lg font-bold text-slate-800 truncate">
+                  <h1 className="text-lg font-bold text-slate-800 truncate dark:text-gray-100">
                     {selectedApi ? selectedApi.name : '所有全域服務'}
-                    {selectedApi && <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi.description}</span>}
+                    {selectedApi && <span className="text-sm font-normal text-slate-400 mx-2 dark:text-gray-400">{selectedApi.description}</span>}
                   </h1>
                 </>
               ) : viewMode === 'env' ? (
@@ -877,7 +898,7 @@ const App = () => {
                     <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} />
                     <span className={`px-1.5 rounded text-[10px] font-bold border ${getEnvColor(selectedEnv?.type)}`}>{selectedEnv?.type}</span>
                   </div>
-                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedEnv?.urlPattern}</h1>
+                  <h1 className="text-lg font-bold text-slate-800 truncate dark:text-gray-100">{selectedEnv?.urlPattern}</h1>
                 </>
               ) : (
                 <>
@@ -887,7 +908,7 @@ const App = () => {
                     {selectedApi?.scope === 'GLOBAL' && <span className="text-[10px] bg-indigo-100 text-indigo-800 px-1.5 rounded border border-indigo-200">全域服務</span>}
                     {selectedApi?.deployRules && <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 rounded border border-amber-200">特殊部署規則</span>}
                   </div>
-                  <h1 className="text-lg font-bold text-slate-800 truncate">{selectedApi?.name} <span className="text-sm font-normal text-slate-400 mx-2">{selectedApi?.description}</span></h1>
+                  <h1 className="text-lg font-bold text-slate-800 truncate dark:text-gray-100">{selectedApi?.name} <span className="text-sm font-normal text-slate-400 mx-2 dark:text-gray-400">{selectedApi?.description}</span></h1>
                 </>
               )}
             </div>
@@ -912,7 +933,7 @@ const App = () => {
             </div>
             <button
               onClick={() => setHideUndeployed(!hideUndeployed)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${hideUndeployed ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${hideUndeployed ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700'}`}
             >
               {hideUndeployed ? <EyeOff size={14} /> : <Eye size={14} />}
               {hideUndeployed ? '隱藏未部署' : '顯示全部'}
@@ -923,13 +944,20 @@ const App = () => {
                 <input
                   type="text"
                   placeholder="過濾 API..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-100 border-transparent rounded-lg text-sm focus:bg-white focus:border-blue-500 outline-none border transition-all"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-100 dark:bg-gray-800 border-transparent rounded-lg text-sm focus:bg-white dark:focus:bg-gray-700 focus:border-blue-500 outline-none border transition-all dark:text-gray-100 dark:placeholder-gray-500"
                   value={contentSearch}
                   onChange={(e) => setContentSearch(e.target.value)}
                 />
               </div>
             )}
-            <button onClick={openConfig} className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 text-slate-500 dark:text-gray-400 transition-colors"
+              title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <button onClick={openConfig} className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800">
               <Settings size={20} />
             </button>
           </div>
@@ -943,59 +971,59 @@ const App = () => {
             <div className="w-full px-6 mx-auto space-y-8 pb-12">
               {Object.entries(envViewApis).map(([category, apiList]) => (
                 <div key={category} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h3 className="flex items-center gap-2 text-lg font-bold text-slate-700 mb-4 px-1">
+                  <h3 className="flex items-center gap-2 text-lg font-bold text-slate-700 mb-4 px-1 dark:text-slate-300">
                     <Layers size={20} className="text-blue-500" />
                     {category}
-                    <span className="text-xs text-slate-400 bg-white border px-2 rounded-full">{apiList.length}</span>
+                    <span className="text-xs text-slate-400 bg-white border px-2 rounded-full dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400">{apiList.length}</span>
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-5">
                     {apiList.map((api) => {
                       const isAvailable = api.isAvailable;
                       return (
-                        <div key={api.id} className={`flex flex-col rounded-xl border shadow-sm transition-all overflow-hidden ${isAvailable ? 'bg-white border-slate-200 hover:shadow-lg hover:border-blue-300' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
-                          <div className={`p-4 border-b border-slate-100 ${isAvailable ? 'bg-white' : 'bg-slate-100/50'}`}>
+                        <div key={api.id} className={`flex flex-col rounded-xl border shadow-sm transition-all overflow-hidden ${isAvailable ? 'bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 dark:bg-slate-800 dark:border-slate-700 dark:hover:border-blue-500/50' : 'bg-slate-50 border-slate-200 opacity-60 dark:bg-slate-800/50 dark:border-slate-700'}`}>
+                          <div className={`p-4 border-b border-slate-100 ${isAvailable ? 'bg-white dark:bg-slate-800' : 'bg-slate-100/50 dark:bg-slate-800/50'} dark:border-slate-700`}>
                             <div className="flex justify-between items-start mb-2">
                               <div className="flex flex-col min-w-0 pr-2">
-                                <h4 className={`font-bold text-base truncate ${isAvailable ? 'text-slate-800' : 'text-slate-500'}`}>{api.name}</h4>
-                                {api.scope === 'REGION' && <span className="text-[9px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 w-fit mt-0.5">區域性</span>}
-                                {api.scope === 'GLOBAL' && <span className="text-[9px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 w-fit mt-0.5">全域</span>}
+                                <h4 className={`font-bold text-base truncate ${isAvailable ? 'text-slate-800 dark:text-slate-100' : 'text-slate-500 dark:text-slate-500'}`}>{api.name}</h4>
+                                {api.scope === 'REGION' && <span className="text-[9px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-100 w-fit mt-0.5 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700">區域性</span>}
+                                {api.scope === 'GLOBAL' && <span className="text-[9px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 w-fit mt-0.5 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-700">全域</span>}
                               </div>
-                              {!isAvailable && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full flex items-center gap-1 shrink-0"><Ban size={10} /> 未部署</span>}
+                              {!isAvailable && <span className="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full flex items-center gap-1 shrink-0 dark:bg-slate-700 dark:text-slate-400"><Ban size={10} /> 未部署</span>}
                             </div>
-                            <p className="text-xs text-slate-500 line-clamp-2 h-8">{api.description || '暫無描述'}</p>
+                            <p className="text-xs text-slate-500 line-clamp-2 h-8 dark:text-slate-400">{api.description || '暫無描述'}</p>
 
                             {/* Base URL Display */}
                             {isAvailable && (
-                              <div className="mt-3 flex items-center gap-1.5 p-2 bg-slate-50 rounded md:rounded-lg border border-slate-100 group-hover:border-blue-100 transition-colors">
+                              <div className="mt-3 flex items-center gap-1.5 p-2 bg-slate-50 rounded md:rounded-lg border border-slate-100 group-hover:border-blue-100 transition-colors dark:bg-slate-900 dark:border-slate-700">
                                 <Globe size={12} className="text-slate-400 shrink-0" />
-                                <code className="text-[10px] text-slate-600 font-mono truncate select-all">
+                                <code className="text-[10px] text-slate-600 font-mono truncate select-all dark:text-slate-300">
                                   {resolveUrl(api, selectedEnv)}
                                 </code>
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 bg-slate-50/50 p-2 space-y-2">
+                          <div className="flex-1 bg-slate-50/50 p-2 space-y-2 dark:bg-slate-800/50">
                             {api.endpoints.map((ep, idx) => {
                               const baseUrl = resolveUrl(api, selectedEnv);
                               const fullUrl = isAvailable ? `${baseUrl}${ep.path}` : null;
                               const uniqueKey = `${selectedEnvId}-${api.id}-${idx}`;
                               const isCopied = copiedKey === uniqueKey;
                               return (
-                                <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-sm hover:border-blue-200 group">
+                                <div key={idx} className="bg-white border border-slate-200 rounded-lg p-2.5 shadow-sm hover:border-blue-200 group dark:bg-slate-800 dark:border-slate-700 dark:hover:border-blue-500/30">
                                   <div className="mb-2">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>{ep.method}</span>
-                                      <span className="text-xs font-semibold text-slate-700 truncate">{ep.label}</span>
+                                      <span className="text-xs font-semibold text-slate-700 truncate dark:text-slate-200">{ep.label}</span>
                                     </div>
-                                    <div className="text-[10px] text-slate-500 font-mono truncate pl-1" title={ep.path}>
+                                    <div className="text-[10px] text-slate-500 font-mono truncate pl-1 dark:text-slate-400" title={ep.path}>
                                       {ep.path}
                                     </div>
                                   </div>
                                   <div className="flex gap-2">
-                                    <button onClick={() => isAvailable && copyToClipboard(fullUrl, uniqueKey)} disabled={!isAvailable} className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold border ${!isAvailable ? 'cursor-not-allowed bg-slate-100' : isCopied ? 'bg-green-50 text-green-700 border-green-200' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
+                                    <button onClick={() => isAvailable && copyToClipboard(fullUrl, uniqueKey)} disabled={!isAvailable} className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold border transition-colors ${!isAvailable ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-700 dark:border-slate-600' : isCopied ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800' : 'bg-white hover:bg-slate-50 border-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600 dark:text-slate-300'}`}>
                                       {isAvailable && isCopied ? <Check size={12} /> : <Copy size={12} />} {isAvailable ? (isCopied ? '已複製' : '複製') : '不可用'}
                                     </button>
-                                    <button onClick={() => isAvailable && fullUrl && window.open(fullUrl, '_blank')} disabled={!isAvailable} className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold border ${!isAvailable ? 'cursor-not-allowed bg-slate-100 text-slate-400' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'}`}>
+                                    <button onClick={() => isAvailable && fullUrl && window.open(fullUrl, '_blank')} disabled={!isAvailable} className={`flex-1 flex items-center justify-center gap-1 py-1 rounded text-[10px] font-bold border transition-colors ${!isAvailable ? 'cursor-not-allowed bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500 dark:border-slate-600' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-700 dark:border-slate-600 dark:hover:bg-slate-600 dark:text-slate-300'}`}>
                                       <ExternalLink size={12} /> {isAvailable ? '前往' : '不可用'}
                                     </button>
                                   </div>
@@ -1016,13 +1044,13 @@ const App = () => {
           {viewMode === 'api' && (
             <div className="w-full px-6 mx-auto pb-12">
               {/* Endpoints Info Card */}
-              <div className="bg-white rounded-xl border border-blue-100 p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center">
-                <h3 className="text-sm font-bold text-slate-600 mr-2">此服務包含端點：</h3>
+              <div className="bg-white rounded-xl border border-blue-100 p-4 mb-6 shadow-sm flex flex-wrap gap-4 items-center dark:bg-gray-900 dark:border-blue-900/30">
+                <h3 className="text-sm font-bold text-slate-600 mr-2 dark:text-gray-300">此服務包含端點：</h3>
                 {selectedApi?.endpoints.map((ep, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg">
+                  <div key={i} className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg dark:bg-gray-800 dark:border-gray-700">
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>{ep.method}</span>
-                    <span className="text-xs font-mono text-slate-600">{ep.path}</span>
-                    <span className="text-xs text-slate-400 border-l pl-2 border-slate-200">{ep.label}</span>
+                    <span className="text-xs font-mono text-slate-600 dark:text-slate-300">{ep.path}</span>
+                    <span className="text-xs text-slate-400 border-l pl-2 border-slate-200 dark:border-slate-700">{ep.label}</span>
                   </div>
                 ))}
               </div>
@@ -1030,32 +1058,32 @@ const App = () => {
               {/* Matrix Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
                 {Object.entries(apiMatrixData).map(([region, envs]) => (
-                  <div key={region} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
-                    <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center">
-                      <div className="flex items-center gap-2 font-bold text-slate-700">
+                  <div key={region} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500 dark:bg-gray-900 dark:border-gray-800">
+                    <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex justify-between items-center dark:bg-gray-800 dark:border-gray-700">
+                      <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-gray-200">
                         <MapPin size={16} className="text-blue-500" />
                         {region}
                       </div>
                       <span className="text-xs text-slate-400">{envs.length} 環境</span>
                     </div>
 
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-gray-800">
                       {envs.map(env => {
                         const isDeployed = env.isDeployed;
                         return (
-                          <div key={env.id} className={`p-4 flex flex-col gap-3 transition-colors ${isDeployed ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50'}`}>
+                          <div key={env.id} className={`p-4 flex flex-col gap-3 transition-colors ${isDeployed ? 'bg-white hover:bg-slate-50 dark:bg-gray-900 dark:hover:bg-gray-800/50' : 'bg-slate-50/50 dark:bg-gray-900/50'}`}>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <span className={`w-2 h-2 rounded-full ${isDeployed ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-slate-300'}`} />
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
-                                    <span className="text-xs font-bold text-slate-700">{env.name}</span>
+                                    <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{env.name}</span>
                                   </div>
-                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5">{resolveUrl(selectedApi, env)}</div>
+                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5 dark:text-gray-500">{resolveUrl(selectedApi, env)}</div>
                                 </div>
                               </div>
-                              {!isDeployed && <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-100 rounded">未部署</span>}
+                              {!isDeployed && <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-100 rounded dark:bg-gray-800 dark:text-gray-500">未部署</span>}
                             </div>
 
                             {/* Action Buttons for this Env */}
@@ -1067,13 +1095,13 @@ const App = () => {
                                   const uniqueKey = `matrix-${env.id}-${i}`;
                                   const isCopied = copiedKey === uniqueKey;
                                   return (
-                                    <div key={i} className="group flex items-stretch bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden h-full">
+                                    <div key={i} className="group flex items-stretch bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden h-full dark:bg-gray-800 dark:border-gray-700 dark:hover:border-blue-500/50">
                                       {/* Primary: Open */}
                                       <a
                                         href={fullUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-1 flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate"
+                                        className="flex-1 flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400"
                                         title={`Open: ${fullUrl}`}
                                       >
                                         <ExternalLink size={14} className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
@@ -1081,7 +1109,7 @@ const App = () => {
                                       </a>
 
                                       {/* Divider */}
-                                      <div className="w-[1px] my-1.5 bg-slate-100 group-hover:bg-slate-200" />
+                                      <div className="w-[1px] my-1.5 bg-slate-100 group-hover:bg-slate-200 dark:bg-gray-700" />
 
                                       {/* Secondary: Copy */}
                                       <button
@@ -1119,7 +1147,7 @@ const App = () => {
           {/* --- VIEW MODE: GLOBAL --- */}
 
           {viewMode === 'global' && (
-            <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200 pb-12">
               {(() => {
                 // Determine which APIs to show: Single Selected or All Global
                 const apisToShow = selectedApi
@@ -1128,7 +1156,7 @@ const App = () => {
 
                 if (apisToShow.length === 0) {
                   return (
-                    <div className="col-span-full text-center py-12 text-slate-400">
+                    <div className="col-span-full text-center py-12 text-slate-400 dark:text-slate-500">
                       <p>未設定全域服務</p>
                     </div>
                   );
@@ -1138,22 +1166,22 @@ const App = () => {
                   const activeUrlIdx = getGlobalUrlIndex(api.id);
 
                   return (
-                    <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
-                      <div className="bg-slate-50 border-b border-slate-100 p-4">
-                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500 dark:bg-slate-800 dark:border-slate-700">
+                      <div className="bg-slate-50 border-b border-slate-100 p-4 dark:bg-slate-800 dark:border-slate-700">
+                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100">
                           <Globe2 className="text-blue-500" size={20} />
                           {api.name}
                         </h2>
-                        <p className="text-xs text-slate-500 mt-1">{api.description}</p>
+                        <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">{api.description}</p>
                       </div>
 
                       {api.urls && api.urls.length > 0 ? (
                         <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                           {api.urls.map((urlItem, urlIdx) => (
-                            <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors">
-                              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60">
+                            <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:hover:border-blue-500/50">
+                              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                <span className="text-xs font-bold text-slate-700">{urlItem.label}</span>
+                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{urlItem.label}</span>
                               </div>
 
                               <div className="space-y-2">
@@ -1163,14 +1191,14 @@ const App = () => {
                                   const isCopied = copiedKey === uniqueKey;
 
                                   return (
-                                    <div key={epIdx} className="group flex items-stretch bg-white border border-slate-200 rounded-md hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden">
+                                    <div key={epIdx} className="group flex items-stretch bg-white border border-slate-200 rounded-md hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden dark:bg-slate-800 dark:border-slate-700 dark:hover:border-blue-500/50">
                                       {/* Primary: Open */}
                                       {fullUrl ? (
                                         <a
                                           href={fullUrl}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate"
+                                          className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-400"
                                           title={`Open: ${fullUrl}`}
                                         >
                                           <ExternalLink size={12} className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
@@ -1222,19 +1250,19 @@ const App = () => {
 
         {isConfigOpen && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Settings className="text-blue-600" size={24} /> 資料源設定</h2>
-                <button onClick={() => setIsConfigOpen(false)}><X size={24} className="text-slate-400 hover:text-slate-600" /></button>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col dark:bg-slate-800 dark:border dark:border-slate-700">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700">
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100"><Settings className="text-blue-600" size={24} /> 資料源設定</h2>
+                <button onClick={() => setIsConfigOpen(false)}><X size={24} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" /></button>
               </div>
-              <div className="flex-1 overflow-hidden p-6 grid grid-cols-2 gap-6 bg-slate-50">
-                <textarea value={configEnvs} onChange={(e) => setConfigEnvs(e.target.value)} className="flex-1 p-4 font-mono text-xs border border-slate-300 rounded-xl resize-none outline-none" spellCheck="false" placeholder="JSON Environments..." />
-                <textarea value={configApis} onChange={(e) => setConfigApis(e.target.value)} className="flex-1 p-4 font-mono text-xs border border-slate-300 rounded-xl resize-none outline-none" spellCheck="false" placeholder="JSON APIs..." />
+              <div className="flex-1 overflow-hidden p-6 grid grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-900/50">
+                <textarea value={configEnvs} onChange={(e) => setConfigEnvs(e.target.value)} className="flex-1 p-4 font-mono text-xs border border-slate-300 rounded-xl resize-none outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300" spellCheck="false" placeholder="JSON Environments..." />
+                <textarea value={configApis} onChange={(e) => setConfigApis(e.target.value)} className="flex-1 p-4 font-mono text-xs border border-slate-300 rounded-xl resize-none outline-none dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300" spellCheck="false" placeholder="JSON APIs..." />
               </div>
-              <div className="px-6 py-4 border-t border-slate-200 bg-white rounded-b-2xl flex justify-between">
-                <button onClick={resetConfig} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg"><RotateCcw size={16} /> 重置</button>
+              <div className="px-6 py-4 border-t border-slate-200 bg-white rounded-b-2xl flex justify-between dark:bg-slate-800 dark:border-slate-700">
+                <button onClick={resetConfig} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg dark:hover:bg-red-900/20"><RotateCcw size={16} /> 重置</button>
                 <div className="flex gap-3">
-                  <button onClick={() => setIsConfigOpen(false)} className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">取消</button>
+                  <button onClick={() => setIsConfigOpen(false)} className="px-5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-700">取消</button>
                   <button onClick={saveConfig} className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-lg"><Save size={18} /> 套用</button>
                 </div>
               </div>
