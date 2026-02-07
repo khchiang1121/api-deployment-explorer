@@ -3,36 +3,40 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-### Added
+
+### 2026-02-08
+#### Added
 - **Dark Mode**:
-  - Implemented full Dark Mode support with a system-aware theme toggle.
-  - Refined color palette to use neutral Slate/Gray tones for a cleaner, professional look (`dark:bg-gray-950`).
-  - Added persistence for user theme preference in `localStorage`.
+  - Implemented full system-aware Dark Mode with a neutral Gray palette.
+  - Added theme persistence via `localStorage`.
+  - Fixed UI inconsistencies in Header and API Matrix views.
+- **URL State Persistence**:
+  - Synchronized application state (View, Region, Cluster, API) with URL query parameters for deep linking.
+- **Global Services Enhancements**:
+  - Optmized Global Settings view with a one-click dense grid layout.
+- **Configuration**:
+  - Implemented automatic random ID generation for environments (`crypto.randomUUID`).
 
-### Fixed
-- **Dark Mode UI Issues**:
-  - Resolved white background issue in API Matrix view.
-  - Corrected header color inconsistency in Dark Mode.
-  - Fixed visibility of text and buttons in "Endpoints Info" card.
+#### Changed
+- **Refactor**:
+  - Simplified configuration schema by removing manual IDs (`70bb252`, `0ace77e`).
+  - Decoupled internal logic from specific Environment attributes.
+  - Removed unused configuration files (`d43de58`).
 
-### Added
-- **URL State Persistence**: Application state (View Mode, Region, Cluster, API) is now synchronized with URL query parameters, enabling deep linking and sharing.
+### 2026-02-07
+#### Added
+- **Global Services Support**: Added initial support for Global Services view (`ef3bbe2`).
+- **Response Handling**: Implemented continue response functionality (`4f432dd`).
 
-### Changed
-- **Persistence Mechanism**: Switched from `localStorage` to URL-based persistence for better shareability and user experience.
-- **State Restoration**: improved initialization logic to robustly restore state from URL parameters relative to loaded configuration.
+### 2026-02-03
+#### Added
+- **Project Initialization**:
+  - Initial commit of ServiceDeck (renamed to `api-deployment-explorer`).
+  - Added CI configuration.
+- **Features**:
+  - Implemented initial layout and Regional API filtering.
+  - Added support for loading configuration from external `config.json` (`c823492`).
 
-### Fixed
-- **Race Condition**: Resolved an issue where initial URL parameters could be overwritten during asynchronous configuration loading.
-
-### Changed
-- **Configuration Schema Refactor**:
-  - Removed `id`, `rawType` field from `Environment` schema in `config.json`.
-  - Removed `displayName` field from `Environment` schema in `config.json`.
-  - Updated `name` field to represent the short Cluster Name (e.g., "STG1" instead of "ENT-STG1").
-- **Core Logic Updates**:
-  - Implemented strictly random ID generation (`crypto.randomUUID`) for all environments on application load.
-  - Decoupled internal logic from environment attributes (`Region`, `Name`).
-  - Updated `resolveUrl` to remove attribute-dependent override key construction, strictly adhering to the "no attribute dependency" rule.
-- **Documentation**:
-  - Updated `docs/Configuration.md` to reflect the removed fields and new schema.
+#### Changed
+- **Documentation**: Updated README with dashboard screenshots.
+- **Refactor**: Renamed project to `api-deployment-explorer`.
