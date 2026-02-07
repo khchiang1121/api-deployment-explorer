@@ -988,25 +988,41 @@ const App = () => {
 
                             {/* Action Buttons for this Env */}
                             {isDeployed && (
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              <div className="grid grid-cols-2 gap-3">
                                 {selectedApi.endpoints.map((ep, i) => {
                                   const baseUrl = resolveUrl(selectedApi, env);
                                   const fullUrl = `${baseUrl}${ep.path}`;
                                   const uniqueKey = `matrix-${env.id}-${i}`;
                                   const isCopied = copiedKey === uniqueKey;
                                   return (
-                                    <button
-                                      key={i}
-                                      onClick={() => copyToClipboard(fullUrl, uniqueKey)}
-                                      className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border transition-all ${isCopied
-                                        ? 'bg-green-50 text-green-700 border-green-200'
-                                        : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600'
-                                        }`}
-                                      title={`${ep.method} ${ep.path}`}
-                                    >
-                                      {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                                      <span className="truncate max-w-[80px]">{ep.label}</span>
-                                    </button>
+                                    <div key={i} className="group flex items-stretch bg-white border border-slate-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden h-full">
+                                      {/* Primary: Open */}
+                                      <a
+                                        href={fullUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate"
+                                        title={`Open: ${fullUrl}`}
+                                      >
+                                        <ExternalLink size={14} className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                                        <span className="truncate">{ep.label}</span>
+                                      </a>
+
+                                      {/* Divider */}
+                                      <div className="w-[1px] my-1.5 bg-slate-100 group-hover:bg-slate-200" />
+
+                                      {/* Secondary: Copy */}
+                                      <button
+                                        onClick={() => copyToClipboard(fullUrl, uniqueKey)}
+                                        className={`px-3 flex items-center justify-center transition-colors focus:outline-none ${isCopied
+                                          ? 'bg-green-50 text-green-600'
+                                          : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'
+                                          }`}
+                                        title="Copy URL"
+                                      >
+                                        {isCopied ? <Check size={14} /> : <Copy size={14} />}
+                                      </button>
+                                    </div>
                                   )
                                 })}
                               </div>
