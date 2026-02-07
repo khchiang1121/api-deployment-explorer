@@ -312,14 +312,50 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // View Mode: 'env' (Environment Centric) | 'api' (API Matrix Centric) | 'global' (Global Services)
-  const [viewMode, setViewMode] = useState<'env' | 'api' | 'global'>('env');
+  // --- URL State Management ---
+  const getUrlParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      view: params.get('view') as 'env' | 'api' | 'global' | null,
+      region: params.get('region'),
+      cluster: params.get('cluster'), // Mapped to env.name
+      api: params.get('api') // Mapped to api.urlKey or api.name
+    };
+  };
+
+  const updateUrl = (view: string, env?: Environment, api?: APIService) => {
+    const params = new URLSearchParams();
+    if (view) params.set('view', view);
+    if (env) {
+      params.set('region', env.region);
+      params.set('cluster', env.name);
+    }
+    if (api) {
+      params.set('api', api.urlKey || api.name);
+    }
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, '', newUrl);
+  };
+
+  // View Mode: Initialize from URL or default to 'env'
+  const [viewMode, setViewMode] = useState<'env' | 'api' | 'global'>(() => {
+    const { view } = getUrlParams();
+    return (view === 'env' || view === 'api' || view === 'global') ? view : 'env';
+  });
 
   // Selected States
   const [selectedEnvId, setSelectedEnvId] = useState<string>('');
   const [selectedApiId, setSelectedApiId] = useState<string>('');
 
   const [selectedGlobalUrlIndices, setSelectedGlobalUrlIndices] = useState<Record<string, number>>({}); // Map: API ID -> URL Index
+
+  // Sync URL when state changes
+  useEffect(() => {
+    if (loading) return;
+    const currentEnv = environments.find(e => e.id === selectedEnvId);
+    const currentApi = apis.find(a => a.id === selectedApiId);
+    updateUrl(viewMode, currentEnv, currentApi);
+  }, [viewMode, selectedEnvId, selectedApiId, environments, apis, loading]);
 
   const [expandedRegions, setExpandedRegions] = useState<Record<string, boolean>>({});
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -337,6 +373,8 @@ const App = () => {
   // Filters (Multi-select)
   const [regionFilter, setRegionFilter] = useState<string[]>(['ALL']);
   const [nameFilter, setNameFilter] = useState<string[]>(['ALL']);
+
+
 
   // Fetch Config on Mount
   useEffect(() => {
@@ -362,14 +400,45 @@ const App = () => {
 
         setApis(processedApis);
 
-        // Set initial selected states
-        if (data.envs.length > 0) {
-          setSelectedEnvId(data.envs[0].id);
-          setExpandedRegions({ [data.envs[0].region]: true });
+        // --- Restore State from URL ---
+        const { region, cluster, api: apiKey } = getUrlParams();
+
+        // 1. Restore Environment
+        let initialEnvId = '';
+        if (region && cluster) {
+          const found = processedEnvs.find((e: any) => e.region === region && e.name === cluster);
+          if (found) initialEnvId = found.id;
         }
-        if (processedApis.length > 0) {
-          setSelectedApiId(processedApis[0].id);
-          setExpandedCategories({ [processedApis[0].category]: true });
+        // Fallback to first if not found or not specified
+        if (!initialEnvId && processedEnvs.length > 0) {
+          initialEnvId = processedEnvs[0].id;
+        }
+
+        if (initialEnvId) {
+          setSelectedEnvId(initialEnvId);
+          const initEnv = processedEnvs.find((e: any) => e.id === initialEnvId);
+          if (initEnv) {
+            setExpandedRegions(prev => ({ ...prev, [initEnv.region]: true }));
+          }
+        }
+
+        // 2. Restore API
+        let initialApiId = '';
+        if (apiKey) {
+          const found = processedApis.find((a: any) => (a.urlKey === apiKey || a.name === apiKey));
+          if (found) initialApiId = found.id;
+        }
+        // Fallback
+        if (!initialApiId && processedApis.length > 0) {
+          initialApiId = processedApis[0].id;
+        }
+
+        if (initialApiId) {
+          setSelectedApiId(initialApiId);
+          const initApi = processedApis.find((a: any) => a.id === initialApiId);
+          if (initApi) {
+            setExpandedCategories(prev => ({ ...prev, [initApi.category]: true }));
+          }
         }
         setLoading(false);
       })

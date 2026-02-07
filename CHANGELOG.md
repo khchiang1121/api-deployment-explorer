@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Added
+- **URL State Persistence**: Application state (View Mode, Region, Cluster, API) is now synchronized with URL query parameters, enabling deep linking and sharing.
+
+### Changed
+- **Persistence Mechanism**: Switched from `localStorage` to URL-based persistence for better shareability and user experience.
+- **State Restoration**: improved initialization logic to robustly restore state from URL parameters relative to loaded configuration.
+
+### Fixed
+- **Race Condition**: Resolved an issue where initial URL parameters could be overwritten during asynchronous configuration loading.
 
 ### Changed
 - **Configuration Schema Refactor**:
