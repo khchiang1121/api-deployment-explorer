@@ -57,7 +57,7 @@
 
 | 欄位 | 類型 | 說明 |
 | :--- | :--- | :--- |
-| `id` | `string` | 唯一識別碼 |
+
 | `name` | `string` | 服務名稱 |
 | `category` | `string` | 分類 (UI 分組用) |
 | `description` | `string` | 簡短描述 |

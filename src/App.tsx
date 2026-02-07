@@ -350,16 +350,24 @@ const App = () => {
       })
       .then(data => {
         setEnvironments(data.envs);
-        setApis(data.apis);
+
+        // Process APIs to ensure they have IDs
+        const processedApis = data.apis.map((api: any, index: number) => ({
+          ...api,
+          // Use existing ID if present, otherwise generate a random unique ID
+          id: api.id || `api-${index}-${Math.random().toString(36).substr(2, 9)}`
+        }));
+
+        setApis(processedApis);
 
         // Set initial selected states
         if (data.envs.length > 0) {
           setSelectedEnvId(data.envs[0].id);
           setExpandedRegions({ [data.envs[0].region]: true });
         }
-        if (data.apis.length > 0) {
-          setSelectedApiId(data.apis[0].id);
-          setExpandedCategories({ [data.apis[0].category]: true });
+        if (processedApis.length > 0) {
+          setSelectedApiId(processedApis[0].id);
+          setExpandedCategories({ [processedApis[0].category]: true });
         }
         setLoading(false);
       })
