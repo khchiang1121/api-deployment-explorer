@@ -1066,103 +1066,78 @@ const App = () => {
                   const activeUrlIdx = getGlobalUrlIndex(api.id);
 
                   return (
-                    <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                      <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Globe2 className="text-blue-500" size={24} />
+                    <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
+                      <div className="bg-slate-50 border-b border-slate-100 p-4">
+                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                          <Globe2 className="text-blue-500" size={20} />
                           {api.name}
-                        </div>
-                      </h2>
-                      <p className="text-slate-600 mb-6">{api.description}</p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">服務連結 (Service URLs)</h3>
-                          {api.urls && api.urls.length > 0 ? (
-                            <div className="space-y-2">
-                              {api.urls.map((urlItem, idx) => (
-                                <button
-                                  key={idx}
-                                  onClick={() => setGlobalUrlIndex(api.id, idx)}
-                                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all text-left group ${activeUrlIdx === idx
-                                    ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500 shadow-sm'
-                                    : 'bg-white border-slate-200 hover:border-blue-300'
-                                    }`}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className={`p-1.5 rounded-full ${activeUrlIdx === idx ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500'}`}>
-                                      <Globe2 size={16} />
-                                    </div>
-                                    <span className={`text-sm font-medium ${activeUrlIdx === idx ? 'text-blue-700' : 'text-slate-700'}`}>{urlItem.label}</span>
-                                  </div>
-                                  {activeUrlIdx === idx && <Check size={16} className="text-blue-600" />}
-                                </button>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-sm text-slate-400 italic">未設定連結</p>
-                          )}
-                        </div>
-
-                        {/* Endpoints List */}
-                        <div className="space-y-4">
-                          <h3 className="font-semibold text-slate-700 border-b border-slate-100 pb-2">Endpoints</h3>
-                          <div className="space-y-2">
-                            {api.endpoints.map((ep, idx) => {
-                              // Resolve URL based on active index for THIS api
-                              const baseUrl = api.urls?.[activeUrlIdx]?.url;
-                              const fullUrl = baseUrl ? `${baseUrl}${ep.path}` : null;
-
-                              return (
-                                <div key={idx} className="flex items-center gap-2">
-                                  {fullUrl ? (
-                                    <a
-                                      href={fullUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex-1 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm transition-all group"
-                                      title={`Open: ${fullUrl}`}
-                                    >
-                                      <span className={`px-2 py-1 rounded text-[10px] font-bold border w-14 text-center ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>
-                                        {ep.method}
-                                      </span>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-xs font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">{ep.label}</div>
-                                        <div className="text-[10px] text-slate-500 font-mono truncate">{ep.path}</div>
-                                      </div>
-                                      <ExternalLink size={14} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
-                                    </a>
-                                  ) : (
-                                    <div className="flex-1 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100 opacity-60 cursor-not-allowed">
-                                      <span className={`px-2 py-1 rounded text-[10px] font-bold border w-14 text-center ${METHOD_COLORS[ep.method] || METHOD_COLORS.DEFAULT}`}>
-                                        {ep.method}
-                                      </span>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="text-xs font-semibold text-slate-700">{ep.label}</div>
-                                        <div className="text-[10px] text-slate-500 font-mono truncate">{ep.path}</div>
-                                      </div>
-                                    </div>
-                                  )}
-
-                                  {/* Copy Button */}
-                                  {fullUrl && (
-                                    <button
-                                      onClick={() => copyToClipboard(fullUrl, `${api.id}-${idx}`)}
-                                      className={`p-3 rounded-lg border transition-all ${copiedKey === `${api.id}-${idx}`
-                                        ? 'bg-green-50 text-green-700 border-green-200'
-                                        : 'bg-white text-slate-400 border-slate-200 hover:border-blue-300 hover:text-blue-600'
-                                        }`}
-                                      title="Copy URL"
-                                    >
-                                      {copiedKey === `${api.id}-${idx}` ? <Check size={18} /> : <Copy size={18} />}
-                                    </button>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">{api.description}</p>
                       </div>
+
+                      {api.urls && api.urls.length > 0 ? (
+                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                          {api.urls.map((urlItem, urlIdx) => (
+                            <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors">
+                              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                <span className="text-xs font-bold text-slate-700">{urlItem.label}</span>
+                              </div>
+
+                              <div className="space-y-2">
+                                {api.endpoints.map((ep, epIdx) => {
+                                  const fullUrl = urlItem.url ? `${urlItem.url}${ep.path}` : null;
+                                  const uniqueKey = `${api.id}-${urlIdx}-${epIdx}`;
+                                  const isCopied = copiedKey === uniqueKey;
+
+                                  return (
+                                    <div key={epIdx} className="group flex items-stretch bg-white border border-slate-200 rounded-md hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden">
+                                      {/* Primary: Open */}
+                                      {fullUrl ? (
+                                        <a
+                                          href={fullUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate"
+                                          title={`Open: ${fullUrl}`}
+                                        >
+                                          <ExternalLink size={12} className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                                          <span className="truncate">{ep.label}</span>
+                                        </a>
+                                      ) : (
+                                        <div className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed">
+                                          <ExternalLink size={12} className="text-slate-300" />
+                                          <span className="truncate">{ep.label}</span>
+                                        </div>
+                                      )}
+
+                                      {/* Divider */}
+                                      <div className="w-[1px] my-1 bg-slate-100 group-hover:bg-slate-200" />
+
+                                      {/* Secondary: Copy */}
+                                      <button
+                                        onClick={() => fullUrl && copyToClipboard(fullUrl, uniqueKey)}
+                                        disabled={!fullUrl}
+                                        className={`px-2 flex items-center justify-center transition-colors focus:outline-none ${!fullUrl ? 'cursor-not-allowed text-slate-300' : isCopied
+                                          ? 'bg-green-50 text-green-600'
+                                          : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'
+                                          }`}
+                                        title={fullUrl ? "Copy URL" : "No URL"}
+                                      >
+                                        {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center text-slate-400 italic">
+                          未設定任何環境連結
+                        </div>
+                      )}
                     </div>
                   );
                 });
@@ -1170,7 +1145,7 @@ const App = () => {
             </div>
           )}
 
-        </div>
+        </div >
 
 
         {isConfigOpen && (
