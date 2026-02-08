@@ -793,7 +793,7 @@ const App = () => {
                 <span>所有全域服務</span>
               </button>
               <div className="h-px bg-slate-200 my-2 mx-1 dark:bg-gray-700" />
-              {apis.filter(api => api.scope === 'GLOBAL').map(api => (
+              {apis.filter(api => api.scope === 'GLOBAL' && api.name.toLowerCase().includes(searchQuery.toLowerCase())).map(api => (
                 <button
                   key={api.id}
                   onClick={() => setSelectedApiId(api.id)}
@@ -802,7 +802,7 @@ const App = () => {
                   <span className="font-medium truncate">{api.name}</span>
                 </button>
               ))}
-              {apis.filter(api => api.scope === 'GLOBAL').length === 0 && (
+              {apis.filter(api => api.scope === 'GLOBAL' && api.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
                 <div className="text-center py-8 text-slate-400 text-xs dark:text-gray-500">
                   沒有全域服務
                 </div>
@@ -1166,12 +1166,12 @@ const App = () => {
           {/* --- VIEW MODE: GLOBAL --- */}
 
           {viewMode === 'global' && (
-            <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200 pb-12">
+            <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200 pb-12">
               {(() => {
                 // Determine which APIs to show: Single Selected or All Global
                 const apisToShow = selectedApi
                   ? [selectedApi]
-                  : apis.filter(a => a.scope === 'GLOBAL');
+                  : apis.filter(a => a.scope === 'GLOBAL' && a.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
                 if (apisToShow.length === 0) {
                   return (
@@ -1200,7 +1200,10 @@ const App = () => {
                             <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:hover:border-blue-500/50">
                               <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
                                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{urlItem.label}</span>
+                                <div>
+                                  <span className="text-xs font-bold text-slate-700 block dark:text-slate-200">{urlItem.label}</span>
+                                  <span className="text-[10px] text-slate-400 block -mt-0.5 truncate dark:text-slate-500" title={urlItem.url}>{urlItem.url}</span>
+                                </div>
                               </div>
 
                               <div className="space-y-2">

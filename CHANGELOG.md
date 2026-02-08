@@ -17,6 +17,11 @@ All notable changes to this project will be documented in this file.
 
 #### Fixed
 - **Configuration**: Removed duplicate `displayName` fields in `config.json` to ensure valid JSON format.
+- **Global Services**:
+  - Widened the Global Services view layout to utilize more screen space (`max-w-[1600px]`).
+  - Added full URL display under environment labels in Global Services cards.
+  - Fixed search functionality in Global Services view to correctly filter both the Sidebar list and Main Content.
+
 
 
 #### Added
