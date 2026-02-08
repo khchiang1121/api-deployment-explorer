@@ -19,6 +19,7 @@ interface DeployRules {
   onlyTypes?: string[];
   excludeRegions?: string[];
   excludeTypes?: string[];
+  onlyClusterTypes?: ('Gen1' | 'Gen2')[];
 }
 
 interface APIService {
@@ -63,11 +64,17 @@ const checkApiAvailability = (api: APIService, env: Environment | undefined) => 
 
   if (!api.deployRules) return true;
 
-  const { onlyRegions, onlyTypes, excludeRegions, excludeTypes } = api.deployRules;
+  const { onlyRegions, onlyTypes, excludeRegions, excludeTypes, onlyClusterTypes } = api.deployRules;
   if (excludeRegions && excludeRegions.includes(env.region)) return false;
   if (excludeTypes && (excludeTypes.includes(env.name) || excludeTypes.includes(env.type))) return false;
   if (onlyRegions && !onlyRegions.includes(env.region)) return false;
   if (onlyTypes && !onlyTypes.includes(env.name) && !onlyTypes.includes(env.type)) return false;
+
+  // Cluster Type Check (Gen1/Gen2)
+  if (onlyClusterTypes) {
+    const currentClusterType = env.clusterType || 'Gen1'; // Default to Gen1
+    if (!onlyClusterTypes.includes(currentClusterType)) return false;
+  }
 
   // Regional API implies availability in the region (simplified logic, usually implies it exists)
   // For now, allow deployRules to control it still.

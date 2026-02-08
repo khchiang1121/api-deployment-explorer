@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
   - Added `clusterType` field to `config.json` to distinguish between Generation 1 and Generation 2 clusters.
   - Implemented logic to display cluster type badges in Environment Header and API Panorama views.
   - Styled badges with distinct colors (Teal for Gen2, Slate for Gen1).
+- **API Deployment Rules**:
+  - Added `onlyClusterTypes` support to `deployRules` in `config.json`.
+  - APIs can now be restricted to specific cluster generations (e.g., `["Gen2"]`) or allowed in both (`["Gen1", "Gen2"]`).
+  - Updated "Docker Registry" configuration to explicitly allow both Gen1 and Gen2 as a verification case.
+
+#### Fixed
+- **Configuration**: Removed duplicate `displayName` fields in `config.json` to ensure valid JSON format.
+
 
 #### Added
 - **Dark Mode**:
