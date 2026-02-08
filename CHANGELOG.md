@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### 2026-02-08
+### [Unreleased]
+#### Added
+- **Gen1/Gen2 Cluster Labels**:
+  - Added `clusterType` field to `config.json` to distinguish between Generation 1 and Generation 2 clusters.
+  - Implemented logic to display cluster type badges in Environment Header and API Panorama views.
+  - Styled badges with distinct colors (Teal for Gen2, Slate for Gen1).
+
 #### Added
 - **Dark Mode**:
   - Implemented full system-aware Dark Mode with a neutral Gray palette.

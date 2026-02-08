@@ -44,6 +44,7 @@ interface Environment {
   urlPattern: string;
   regionalUrlPattern?: string;
   isDeployed?: boolean;
+  clusterType?: 'Gen1' | 'Gen2';
 }
 
 // 檢查 API 是否在特定環境可用
@@ -410,6 +411,7 @@ const App = () => {
         const processedEnvs = data.envs.map((env: any) => ({
           ...env,
           id: self.crypto.randomUUID ? self.crypto.randomUUID() : `env-${Math.random().toString(36).substr(2, 9)}`,
+          clusterType: env.clusterType || 'Gen1'
         }));
         setEnvironments(processedEnvs);
 
@@ -897,6 +899,11 @@ const App = () => {
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-0.5">
                     <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} />
                     <span className={`px-1.5 rounded text-[10px] font-bold border ${getEnvColor(selectedEnv?.type)}`}>{selectedEnv?.type}</span>
+                    {selectedEnv?.clusterType && (
+                      <span className={`px-1.5 rounded text-[10px] font-bold border ${selectedEnv.clusterType === 'Gen2' ? 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}`}>
+                        {selectedEnv.clusterType}
+                      </span>
+                    )}
                   </div>
                   <h1 className="text-lg font-bold text-slate-800 truncate dark:text-gray-100">{selectedEnv?.urlPattern}</h1>
                 </>
@@ -1078,6 +1085,11 @@ const App = () => {
                                 <div>
                                   <div className="flex items-center gap-2">
                                     <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
+                                    {env.clusterType && (
+                                      <span className={`text-[10px] px-1.5 rounded border ${env.clusterType === 'Gen2' ? 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}`}>
+                                        {env.clusterType}
+                                      </span>
+                                    )}
                                     <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{env.name}</span>
                                   </div>
                                   <div className="text-[10px] text-slate-400 font-mono mt-0.5 dark:text-gray-500">{resolveUrl(selectedApi, env)}</div>
