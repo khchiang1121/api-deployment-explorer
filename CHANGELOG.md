@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
   - Widened the Global Services view layout to utilize more screen space (`max-w-[1600px]`).
   - Added full URL display under environment labels in Global Services cards.
   - Fixed search functionality in Global Services view to correctly filter both the Sidebar list and Main Content.
+- **UI Improvements**:
+  - Changed "Gen2" cluster label color from Teal to **Blue** to improve contrast against "Dev" (Emerald) and "QA" (Amber) labels.
 
 
 

@@ -907,7 +907,7 @@ const App = () => {
                     <MapPin size={12} /> {selectedEnv?.region} <ChevronRight size={12} />
                     <span className={`px-1.5 rounded text-[10px] font-bold border ${getEnvColor(selectedEnv?.type)}`}>{selectedEnv?.type}</span>
                     {selectedEnv?.clusterType && (
-                      <span className={`px-1.5 rounded text-[10px] font-bold border ${selectedEnv.clusterType === 'Gen2' ? 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}`}>
+                      <span className={`px-1.5 rounded text-[10px] font-bold border ${selectedEnv.clusterType === 'Gen2' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}`}>
                         {selectedEnv.clusterType}
                       </span>
                     )}
@@ -1093,7 +1093,7 @@ const App = () => {
                                   <div className="flex items-center gap-2">
                                     <span className={`text-[10px] px-1.5 rounded border ${getEnvColor(env.type)}`}>{env.type}</span>
                                     {env.clusterType && (
-                                      <span className={`text-[10px] px-1.5 rounded border ${env.clusterType === 'Gen2' ? 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-700' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}`}>
+                                      <span className={`text-[10px] px-1.5 rounded border ${env.clusterType === 'Gen2' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700' : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'}`}>
                                         {env.clusterType}
                                       </span>
                                     )}
