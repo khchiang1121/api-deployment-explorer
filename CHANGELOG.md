@@ -30,6 +30,10 @@ All notable changes to this project will be documented in this file.
 - **Development**:
   - Added `public/config.dev.json` with realistic test data (US/EU regions, Payment Gateway, GenAI).
   - Updated `App.tsx` to load `config.dev.json` by default for development.
+  - Fixed TypeScript build errors:
+    - Added missing `displayName` to `Environment` interface.
+    - Fixed `selectedApi` null safety in Environment View.
+    - Resolved syntax errors in Global View logic.
 
 
 

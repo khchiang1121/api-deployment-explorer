@@ -40,7 +40,7 @@ interface Environment {
   id: string; // Generated internally: `${region}-${name}`
   region: string;
   name: string; // Cluster Name (e.g. "STG1")
-  // displayName?: string;
+  displayName?: string;
   type: string;
   urlPattern: string;
   regionalUrlPattern?: string;
@@ -325,8 +325,9 @@ const App = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Health Check State
+  // Health Check State
   const [healthStatus, setHealthStatus] = useState<Record<string, 'online' | 'offline' | 'loading'>>({});
-  const healthStatusRef = useRef<Record<string, 'online' | 'offline' | 'loading'>>({});
+  // const healthStatusRef = useRef<Record<string, 'online' | 'offline' | 'loading'>>({}); // Unused in current impl
 
   // --- Theme Management ---
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -385,7 +386,7 @@ const App = () => {
   const [selectedEnvId, setSelectedEnvId] = useState<string>('');
   const [selectedApiId, setSelectedApiId] = useState<string>('');
 
-  const [selectedGlobalUrlIndices, setSelectedGlobalUrlIndices] = useState<Record<string, number>>({}); // Map: API ID -> URL Index
+  // const [selectedGlobalUrlIndices, setSelectedGlobalUrlIndices] = useState<Record<string, number>>({}); // Map: API ID -> URL Index // Unused
 
   // Sync URL when state changes
   useEffect(() => {
@@ -659,7 +660,7 @@ const App = () => {
       // Process each env against selectedApi
       const processedEnvs = regionEnvs.map(env => ({
         ...env,
-        isDeployed: checkApiAvailability(selectedApi, env)
+        isDeployed: selectedApi ? checkApiAvailability(selectedApi, env) : false
       }));
 
       // Filter if needed (Deployment Status)
@@ -673,6 +674,13 @@ const App = () => {
     });
     return groups;
   }, [environments, selectedApi, hideUndeployed, viewMode, regionFilter, nameFilter]);
+
+  const globalApisToShow = useMemo(() => {
+    if (viewMode !== 'global') return [];
+    return selectedApi
+      ? [selectedApi]
+      : apis.filter(a => a.scope === 'GLOBAL' && a.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [viewMode, selectedApi, apis, searchQuery]);
 
 
   // --- Actions ---
@@ -717,10 +725,10 @@ const App = () => {
     // Reset global url index logic if needed, or just keep them
   }, [viewMode, apis]);
 
-  const getGlobalUrlIndex = (apiId: string) => selectedGlobalUrlIndices[apiId] || 0;
-  const setGlobalUrlIndex = (apiId: string, idx: number) => {
-    setSelectedGlobalUrlIndices(prev => ({ ...prev, [apiId]: idx }));
-  };
+  // const getGlobalUrlIndex = (apiId: string) => selectedGlobalUrlIndices[apiId] || 0;
+  // const setGlobalUrlIndex = (apiId: string, idx: number) => {
+  //   setSelectedGlobalUrlIndices(prev => ({ ...prev, [apiId]: idx }));
+  // };
 
   const openConfig = () => {
     setConfigEnvs(JSON.stringify(environments, null, 2));
@@ -1155,14 +1163,14 @@ const App = () => {
                                     )}
                                     <span className="text-xs font-bold text-slate-700 dark:text-gray-200">{env.name}</span>
                                   </div>
-                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5 dark:text-gray-500">{resolveUrl(selectedApi, env)}</div>
+                                  <div className="text-[10px] text-slate-400 font-mono mt-0.5 dark:text-gray-500">{selectedApi ? resolveUrl(selectedApi, env) : ''}</div>
                                 </div>
                               </div>
                               {!isDeployed && <span className="text-xs text-slate-400 font-medium px-2 py-1 bg-slate-100 rounded dark:bg-gray-800 dark:text-gray-500">未部署</span>}
                             </div>
 
                             {/* Action Buttons for this Env */}
-                            {isDeployed && (
+                            {isDeployed && selectedApi && (
                               <div className="grid grid-cols-2 gap-3">
                                 {selectedApi.endpoints.map((ep, i) => {
                                   const baseUrl = resolveUrl(selectedApi, env);
@@ -1223,103 +1231,90 @@ const App = () => {
 
           {viewMode === 'global' && (
             <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200 pb-12">
-              {(() => {
-                // Determine which APIs to show: Single Selected or All Global
-                const apisToShow = selectedApi
-                  ? [selectedApi]
-                  : apis.filter(a => a.scope === 'GLOBAL' && a.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-                if (apisToShow.length === 0) {
-                  return (
-                    <div className="col-span-full text-center py-12 text-slate-400 dark:text-slate-500">
-                      <p>未設定全域服務</p>
+              {globalApisToShow.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-slate-400 dark:text-slate-500">
+                  <p>未設定全域服務</p>
+                </div>
+              ) : (
+                globalApisToShow.map(api => (
+                  <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="bg-slate-50 border-b border-slate-100 p-4 dark:bg-slate-800 dark:border-slate-700">
+                      <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100">
+                        <Globe2 className="text-blue-500" size={20} />
+                        {api.name}
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">{api.description}</p>
                     </div>
-                  );
-                }
 
-                return apisToShow.map(api => {
-                  const activeUrlIdx = getGlobalUrlIndex(api.id);
-
-                  return (
-                    <div key={api.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500 dark:bg-slate-800 dark:border-slate-700">
-                      <div className="bg-slate-50 border-b border-slate-100 p-4 dark:bg-slate-800 dark:border-slate-700">
-                        <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2 dark:text-slate-100">
-                          <Globe2 className="text-blue-500" size={20} />
-                          {api.name}
-                        </h2>
-                        <p className="text-xs text-slate-500 mt-1 dark:text-slate-400">{api.description}</p>
-                      </div>
-
-                      {api.urls && api.urls.length > 0 ? (
-                        <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                          {api.urls.map((urlItem, urlIdx) => (
-                            <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:hover:border-blue-500/50">
-                              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                <div>
-                                  <span className="text-xs font-bold text-slate-700 block dark:text-slate-200">{urlItem.label}</span>
-                                  <span className="text-[10px] text-slate-400 block -mt-0.5 truncate dark:text-slate-500" title={urlItem.url}>{urlItem.url}</span>
-                                </div>
-                              </div>
-
-                              <div className="space-y-2">
-                                {api.endpoints.map((ep, epIdx) => {
-                                  const fullUrl = urlItem.url ? `${urlItem.url}${ep.path}` : null;
-                                  const uniqueKey = `${api.id}-${urlIdx}-${epIdx}`;
-                                  const isCopied = copiedKey === uniqueKey;
-
-                                  return (
-                                    <div key={epIdx} className="group flex items-stretch bg-white border border-slate-200 rounded-md hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden dark:bg-slate-800 dark:border-slate-700 dark:hover:border-blue-500/50">
-                                      {/* Primary: Open */}
-                                      {fullUrl ? (
-                                        <a
-                                          href={fullUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-400"
-                                          title={`Open: ${fullUrl}`}
-                                        >
-                                          <ExternalLink size={12} className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
-                                          <span className="truncate">{ep.label}</span>
-                                        </a>
-                                      ) : (
-                                        <div className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed">
-                                          <ExternalLink size={12} className="text-slate-300" />
-                                          <span className="truncate">{ep.label}</span>
-                                        </div>
-                                      )}
-
-                                      {/* Divider */}
-                                      <div className="w-[1px] my-1 bg-slate-100 group-hover:bg-slate-200" />
-
-                                      {/* Secondary: Copy */}
-                                      <button
-                                        onClick={() => fullUrl && copyToClipboard(fullUrl, uniqueKey)}
-                                        disabled={!fullUrl}
-                                        className={`px-2 flex items-center justify-center transition-colors focus:outline-none ${!fullUrl ? 'cursor-not-allowed text-slate-300' : isCopied
-                                          ? 'bg-green-50 text-green-600'
-                                          : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'
-                                          }`}
-                                        title={fullUrl ? "Copy URL" : "No URL"}
-                                      >
-                                        {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                                      </button>
-                                    </div>
-                                  );
-                                })}
+                    {api.urls && api.urls.length > 0 ? (
+                      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {api.urls.map((urlItem, urlIdx) => (
+                          <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:hover:border-blue-500/50">
+                            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                              <div>
+                                <span className="text-xs font-bold text-slate-700 block dark:text-slate-200">{urlItem.label}</span>
+                                <span className="text-[10px] text-slate-400 block -mt-0.5 truncate dark:text-slate-500" title={urlItem.url}>{urlItem.url}</span>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-8 text-center text-slate-400 italic">
-                          未設定任何環境連結
-                        </div>
-                      )}
-                    </div>
-                  );
-                });
-              })()}
+
+                            <div className="space-y-2">
+                              {api.endpoints.map((ep, epIdx) => {
+                                const fullUrl = urlItem.url ? `${urlItem.url}${ep.path}` : null;
+                                const uniqueKey = `${api.id}-${urlIdx}-${epIdx}`;
+                                const isCopied = copiedKey === uniqueKey;
+
+                                return (
+                                  <div key={epIdx} className="group flex items-stretch bg-white border border-slate-200 rounded-md hover:border-blue-400 hover:shadow-sm transition-all overflow-hidden dark:bg-slate-800 dark:border-slate-700 dark:hover:border-blue-500/50">
+                                    {/* Primary: Open */}
+                                    {fullUrl ? (
+                                      <a
+                                        href={fullUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors truncate dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-400"
+                                        title={`Open: ${fullUrl}`}
+                                      >
+                                        <ExternalLink size={12} className="text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
+                                        <span className="truncate">{ep.label}</span>
+                                      </a>
+                                    ) : (
+                                      <div className="flex-1 flex items-center gap-2 px-2 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed">
+                                        <ExternalLink size={12} className="text-slate-300" />
+                                        <span className="truncate">{ep.label}</span>
+                                      </div>
+                                    )}
+
+                                    {/* Divider */}
+                                    <div className="w-[1px] my-1 bg-slate-100 group-hover:bg-slate-200" />
+
+                                    {/* Secondary: Copy */}
+                                    <button
+                                      onClick={() => fullUrl && copyToClipboard(fullUrl, uniqueKey)}
+                                      disabled={!fullUrl}
+                                      className={`px-2 flex items-center justify-center transition-colors focus:outline-none ${!fullUrl ? 'cursor-not-allowed text-slate-300' : isCopied
+                                        ? 'bg-green-50 text-green-600'
+                                        : 'text-slate-400 hover:text-blue-600 hover:bg-slate-50'
+                                        }`}
+                                      title={fullUrl ? "Copy URL" : "No URL"}
+                                    >
+                                      {isCopied ? <Check size={12} /> : <Copy size={12} />}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-8 text-center text-slate-400 italic">
+                        未設定任何環境連結
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           )}
 
