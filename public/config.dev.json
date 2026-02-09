@@ -1,0 +1,187 @@
+{
+  "envs": [
+    {
+      "region": "US-East",
+      "name": "Virginia-1",
+      "type": "PRD",
+      "urlPattern": "https://{api}.use1.prd.example.com",
+      "regionalUrlPattern": "https://{api}.useast.example.com",
+      "clusterType": "Gen2"
+    },
+    {
+      "region": "US-West",
+      "name": "Oregon-1",
+      "type": "STG",
+      "urlPattern": "https://{api}.usw1.stg.example.com",
+      "regionalUrlPattern": "https://{api}.uswest.example.com",
+      "clusterType": "Gen1"
+    },
+    {
+      "region": "EU-Central",
+      "name": "Frankfurt-1",
+      "type": "PRD",
+      "urlPattern": "https://{api}.euc1.prd.example.com",
+      "regionalUrlPattern": "https://{api}.eucentral.example.com",
+      "clusterType": "Gen2"
+    },
+    {
+      "region": "APAC",
+      "name": "Tokyo-1",
+      "type": "DEV",
+      "urlPattern": "https://{api}.apne1.dev.example.com",
+      "regionalUrlPattern": "https://{api}.apac.example.com",
+      "clusterType": "Gen1"
+    },
+    {
+      "region": "Global",
+      "name": "Global",
+      "type": "PRD",
+      "urlPattern": "",
+      "clusterType": "Gen1"
+    }
+  ],
+  "apis": [
+    {
+      "id": "api-payment-gateway",
+      "category": "Finance",
+      "name": "Payment Gateway",
+      "urlKey": "payment",
+      "description": "Processes credit card and crypto payments.",
+      "scope": "CLUSTER",
+      "deployRules": {
+        "excludeRegions": [
+          "APAC"
+        ]
+      },
+      "endpoints": [
+        {
+          "method": "POST",
+          "label": "Charge",
+          "path": "/v1/charge"
+        },
+        {
+          "method": "POST",
+          "label": "Refund",
+          "path": "/v1/refund"
+        }
+      ]
+    },
+    {
+      "id": "api-ai-inference",
+      "category": "AI Services",
+      "name": "GenAI Inference Engine",
+      "urlKey": "inference",
+      "description": "LLM Inference Service. Requires High-Performance Compute (Gen2).",
+      "scope": "CLUSTER",
+      "deployRules": {
+        "onlyClusterTypes": [
+          "Gen2"
+        ]
+      },
+      "endpoints": [
+        {
+          "method": "POST",
+          "label": "Completions",
+          "path": "/v1/chat/completions"
+        },
+        {
+          "method": "POST",
+          "label": "Embeddings",
+          "path": "/v1/embeddings"
+        }
+      ]
+    },
+    {
+      "id": "api-legacy-inventory",
+      "category": "Legacy",
+      "name": "Inventory Monolith",
+      "urlKey": "inventory-v1",
+      "description": "Legacy SOAP-based inventory system. Gen1 Clusters only.",
+      "scope": "CLUSTER",
+      "deployRules": {
+        "onlyClusterTypes": [
+          "Gen1"
+        ]
+      },
+      "endpoints": [
+        {
+          "method": "POST",
+          "label": "CheckStock",
+          "path": "/SoapService.asmx"
+        }
+      ]
+    },
+    {
+      "id": "api-edge-cache",
+      "category": "Infrastructure",
+      "name": "Edge Cache Manager",
+      "urlKey": "edge-cache",
+      "description": "Regional CDN cache invalidation service.",
+      "scope": "REGION",
+      "endpoints": [
+        {
+          "method": "DELETE",
+          "label": "Purge",
+          "path": "/v1/purge"
+        },
+        {
+          "method": "GET",
+          "label": "Stats",
+          "path": "/v1/stats"
+        }
+      ]
+    },
+    {
+      "id": "api-identity-provider",
+      "category": "Security",
+      "name": "Identity Provider (IdP)",
+      "urlKey": "idp",
+      "description": "Global Authentication Service (SSO).",
+      "scope": "GLOBAL",
+      "urls": [
+        {
+          "label": "Primary (US)",
+          "url": "https://auth.us.example.com"
+        },
+        {
+          "label": "Secondary (EU)",
+          "url": "https://auth.eu.example.com"
+        }
+      ],
+      "endpoints": []
+    },
+    {
+      "id": "api-audit-log",
+      "category": "Compliance",
+      "name": "Global Audit Log",
+      "urlKey": "audit",
+      "description": "Centralized audit logging.",
+      "scope": "GLOBAL",
+      "urls": [
+        {
+          "label": "Log Stream",
+          "url": "https://audit.global.example.com"
+        }
+      ],
+      "endpoints": []
+    },
+    {
+      "id": "api-search-gateway",
+      "category": "Search",
+      "name": "Search Gateway",
+      "urlKey": "search",
+      "description": "Unified Search Interface. (Health Check Test -> Google)",
+      "scope": "CLUSTER",
+      "urlOverrides": {
+        "US-East-Virginia-1": "https://google.com"
+      },
+      "endpoints": [
+        {
+          "method": "GET",
+          "label": "Query",
+          "path": "/v1/query"
+        }
+      ]
+    }
+  ]
+}

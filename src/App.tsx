@@ -111,6 +111,7 @@ const resolveUrl = (api: APIService, env: Environment | undefined) => {
 
 // Feature Flags
 const ENABLE_HEALTH_CHECK = true; // Toggle Health Check Feature
+const CONFIG_FILE_PATH = './config.dev.json';
 
 // 顏色對應
 const METHOD_COLORS: Record<string, string> = {
@@ -415,7 +416,7 @@ const App = () => {
 
   // Fetch Config on Mount
   useEffect(() => {
-    fetch('./config.json')
+    fetch(CONFIG_FILE_PATH)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load config');
         return res.json();

@@ -27,6 +27,9 @@ All notable changes to this project will be documented in this file.
   - Added visual health indicators (Green/Red dots) before the URL in Environment View.
   - Implemented `ENABLE_HEALTH_CHECK` toggle (default: `true`).
   - Fixed Environment ID generation to be stable (`${region}-${name}`), enabling correct `urlOverrides` in `config.json`.
+- **Development**:
+  - Added `public/config.dev.json` with realistic test data (US/EU regions, Payment Gateway, GenAI).
+  - Updated `App.tsx` to load `config.dev.json` by default for development.
 
 
 
