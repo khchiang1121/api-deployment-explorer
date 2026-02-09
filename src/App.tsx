@@ -109,6 +109,9 @@ const resolveUrl = (api: APIService, env: Environment | undefined) => {
   return url;
 };
 
+// Feature Flags
+const ENABLE_HEALTH_CHECK = true; // Toggle Health Check Feature
+
 // 顏色對應
 const METHOD_COLORS: Record<string, string> = {
   GET: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -320,6 +323,10 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Health Check State
+  const [healthStatus, setHealthStatus] = useState<Record<string, 'online' | 'offline' | 'loading'>>({});
+  const healthStatusRef = useRef<Record<string, 'online' | 'offline' | 'loading'>>({});
+
   // --- Theme Management ---
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
@@ -414,10 +421,10 @@ const App = () => {
         return res.json();
       })
       .then(data => {
-        // Process Environments: Generate Random Unique ID
+        // Process Environments: Generate Stable ID based on Region and Name
         const processedEnvs = data.envs.map((env: any) => ({
           ...env,
-          id: self.crypto.randomUUID ? self.crypto.randomUUID() : `env-${Math.random().toString(36).substr(2, 9)}`,
+          id: `${env.region}-${env.name}`, // Stable ID for urlOverrides
           clusterType: env.clusterType || 'Gen1'
         }));
         setEnvironments(processedEnvs);
@@ -560,6 +567,43 @@ const App = () => {
     });
     return groups;
   }, [apis, contentSearch, selectedEnv, hideUndeployed, viewMode]);
+
+
+  // --- Health Check Logic ---
+  const checkHealth = async (url: string) => {
+    if (!ENABLE_HEALTH_CHECK) return;
+    if (healthStatus[url] === 'online') return; // Don't re-check if already compatible? Or maybe we should? Let's skip for now to avoid spam.
+
+    setHealthStatus(prev => ({ ...prev, [url]: 'loading' }));
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
+      // Try no-cors to avoid CORS errors when checking availability
+      await fetch(url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+
+      clearTimeout(timeoutId);
+      setHealthStatus(prev => ({ ...prev, [url]: 'online' }));
+    } catch (err) {
+      console.warn(`Health check failed for ${url}`, err);
+      setHealthStatus(prev => ({ ...prev, [url]: 'offline' }));
+    }
+  };
+
+  // Trigger Health Check when Environment View list changes
+  // Trigger Health Check when Environment View list changes
+  useEffect(() => {
+    if (!ENABLE_HEALTH_CHECK || viewMode !== 'env' || !selectedEnv) return;
+
+    Object.values(envViewApis).flat().forEach(api => {
+      if (api.isAvailable) {
+        const url = resolveUrl(api, selectedEnv);
+        if (url) {
+          checkHealth(url);
+        }
+      }
+    });
+  }, [envViewApis, viewMode, selectedEnv]); // Removed healthStatus to avoid infinite loop
 
 
   // --- 計算邏輯：API 全景視角 ---
@@ -1010,9 +1054,20 @@ const App = () => {
                             {isAvailable && (
                               <div className="mt-3 flex items-center gap-1.5 p-2 bg-slate-50 rounded md:rounded-lg border border-slate-100 group-hover:border-blue-100 transition-colors dark:bg-slate-900 dark:border-slate-700">
                                 <Globe size={12} className="text-slate-400 shrink-0" />
-                                <code className="text-[10px] text-slate-600 font-mono truncate select-all dark:text-slate-300">
-                                  {resolveUrl(api, selectedEnv)}
-                                </code>
+                                <div className="flex-1 min-w-0 flex items-center gap-2">
+                                  {ENABLE_HEALTH_CHECK && (
+                                    <span
+                                      className={`w-2 h-2 rounded-full shrink-0 ${healthStatus[resolveUrl(api, selectedEnv)] === 'online' ? 'bg-green-500 shadow-[0_0_4px_rgba(34,197,94,0.4)]' :
+                                        healthStatus[resolveUrl(api, selectedEnv)] === 'loading' ? 'bg-slate-300 animate-pulse' :
+                                          'bg-red-500'
+                                        }`}
+                                      title={healthStatus[resolveUrl(api, selectedEnv)] || 'Unknown'}
+                                    />
+                                  )}
+                                  <code className="text-[10px] text-slate-600 font-mono truncate select-all dark:text-slate-300">
+                                    {resolveUrl(api, selectedEnv)}
+                                  </code>
+                                </div>
                               </div>
                             )}
                           </div>

@@ -23,6 +23,10 @@ All notable changes to this project will be documented in this file.
   - Fixed search functionality in Global Services view to correctly filter both the Sidebar list and Main Content.
 - **UI Improvements**:
   - Changed "Gen2" cluster label color from Teal to **Blue** to improve contrast against "Dev" (Emerald) and "QA" (Amber) labels.
+- **Health Check**:
+  - Added visual health indicators (Green/Red dots) before the URL in Environment View.
+  - Implemented `ENABLE_HEALTH_CHECK` toggle (default: `true`).
+  - Fixed Environment ID generation to be stable (`${region}-${name}`), enabling correct `urlOverrides` in `config.json`.
 
 
 
