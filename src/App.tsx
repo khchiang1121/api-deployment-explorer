@@ -700,7 +700,7 @@ const App = () => {
 
   const getEnvColor = (type: string) => {
     const t = (type || '').toUpperCase();
-    if (t.includes('PRD')) return 'bg-rose-100 text-rose-800 border-rose-200';
+    if (t.includes('PRD') || t.includes('EDG')) return 'bg-rose-100 text-rose-800 border-rose-200';
     if (t.includes('QA') || t.includes('STG')) return 'bg-amber-100 text-amber-800 border-amber-200';
     return 'bg-emerald-100 text-emerald-800 border-emerald-200';
   };
@@ -1230,7 +1230,7 @@ const App = () => {
           {/* --- VIEW MODE: GLOBAL --- */}
 
           {viewMode === 'global' && (
-            <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200 pb-12">
+            <div className="w-full px-6 mx-auto space-y-6 animate-in fade-in zoom-in-95 duration-200 pb-12">
               {globalApisToShow.length === 0 ? (
                 <div className="col-span-full text-center py-12 text-slate-400 dark:text-slate-500">
                   <p>未設定全域服務</p>
@@ -1247,7 +1247,7 @@ const App = () => {
                     </div>
 
                     {api.urls && api.urls.length > 0 ? (
-                      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      <div className="p-4 grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
                         {api.urls.map((urlItem, urlIdx) => (
                           <div key={urlIdx} className="bg-slate-50 rounded-lg border border-slate-200 p-3 h-full hover:border-blue-300 transition-colors dark:bg-slate-900 dark:border-slate-700 dark:hover:border-blue-500/50">
                             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">

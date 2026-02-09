@@ -35,6 +35,12 @@ All notable changes to this project will be documented in this file.
     - Fixed `selectedApi` null safety in Environment View.
     - Resolved syntax errors in Global View logic.
 
+#### Changed
+- **Global View**:
+  - Updated grid layout to use responsive columns (`minmax(300px, 1fr)`) instead of fixed breakpoints.
+  - Removed max-width constraint (`max-w-[1600px]`) to utilize full screen width on large displays.
+
+
 
 
 #### Added
